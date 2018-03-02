@@ -33,7 +33,9 @@ setup(
     url='https://github.com/adamchainz/apig-wsgi',
     py_modules=['apig_wsgi'],
     include_package_data=True,
-    install_requires=[],
+    install_requires=[
+        'six',
+    ],
     python_requires='>=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*',
     license='ISC License',
     zip_safe=False,
