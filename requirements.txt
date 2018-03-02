@@ -23,4 +23,4 @@ pyflakes==1.6.0           # via flake8
 pygments==2.2.0
 pytest-cov==2.5.1
 pytest==3.4.1
-six==1.11.0               # via pytest
+six==1.11.0
