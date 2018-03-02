@@ -13,15 +13,6 @@ __version__ = '1.0.0'
 
 __all__ = ('make_lambda_handler',)
 
-if sys.version_info[0] >= 3:  # pragma: no cover
-    def force_bytes(val):
-        if isinstance(val, str):
-            return val.encode('utf-8')
-        return val
-else:  # pragma: no cover
-    def force_bytes(val):
-        return val
-
 
 def make_lambda_handler(wsgi_app):
     """
@@ -31,14 +22,14 @@ def make_lambda_handler(wsgi_app):
     def handler(event, context):
         environ = get_environ(event)
         response = Response()
-        result = wsgi_app(environ, response.start)
+        result = wsgi_app(environ, response.start_response)
         response.consume(result)
         return response.as_apig_response()
     return handler
 
 
 def get_environ(event):
-    body = event.get('body', '') or ''
+    body = (event.get('body', '') or '').encode('utf-8')
 
     environ = {
         'CONTENT_LENGTH': str(len(body)),
@@ -50,13 +41,15 @@ def get_environ(event):
         'SCRIPT_NAME': '',
         'SERVER_PROTOCOL': 'HTTP/1.1',
         'wsgi.errors': sys.stderr,
-        'wsgi.input': BytesIO(body.encode('utf-8')),
+        'wsgi.input': BytesIO(body),
         'wsgi.multiprocess': False,
         'wsgi.multithread': False,
         'wsgi.run_once': False,
         'wsgi.version': (1, 0),
     }
-    for key, value in six.iteritems(event.get('headers', {})):
+
+    headers = event.get('headers') or {}  # may be None when testing on console
+    for key, value in six.iteritems(headers):
         key = key.upper().replace('-', '_')
 
         if key == 'CONTENT_TYPE':
@@ -81,7 +74,7 @@ class Response(object):
         self.headers = []
         self.body = BytesIO()
 
-    def start(self, status, response_headers, exc_info=None):
+    def start_response(self, status, response_headers, exc_info=None):
         self.status_code = status.split()[0]
         self.headers.extend(response_headers)
         return self.body.write
@@ -90,7 +83,7 @@ class Response(object):
         try:
             for data in result:
                 if data:
-                    self.body.write(force_bytes(data))
+                    self.body.write(data)
         finally:
             if hasattr(result, 'close'):
                 result.close()
