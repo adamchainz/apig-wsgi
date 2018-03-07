@@ -3,19 +3,22 @@ from __future__ import absolute_import, division, print_function, unicode_litera
 
 from io import BytesIO
 
+import pytest
+
 from apig_wsgi import make_lambda_handler
 
 
-def hello_world_app(environ, start_response):
-    body = environ['wsgi.input'].read()
-    start_response('200 OK', [('Content-type', 'text/plain')])
+@pytest.fixture()
+def simple_app():
+    def app(environ, start_response):
+        app.environ = environ
+        start_response('200 OK', app.headers)
+        return BytesIO(app.response)
 
-    if environ['REQUEST_METHOD'] == 'POST':
-        return BytesIO(body)
-    return BytesIO(b'Hello World\n')
-
-
-hello_world_handler = make_lambda_handler(hello_world_app)
+    app.headers = [('Content-Type', 'text/plain')]
+    app.response = b'Hello World\n'
+    app.handler = make_lambda_handler(app)
+    yield app
 
 
 def make_event(method='GET', qs_params=None, headers=None, body=''):
@@ -35,42 +38,55 @@ def make_event(method='GET', qs_params=None, headers=None, body=''):
     }
 
 
-def test_get():
-    response = hello_world_handler(make_event(), None)
+def test_get(simple_app):
+    response = simple_app.handler(make_event(), None)
 
     assert response == {
         'statusCode': '200',
-        'headers': {'Content-type': 'text/plain'},
+        'headers': {'Content-Type': 'text/plain'},
         'body': b'Hello World\n',
     }
 
 
-def test_post():
-    event = make_event(method='POST', body='The World Is Large')
+def test_post(simple_app):
+    event = make_event(method='POST', body='The World is Large')
 
-    response = hello_world_handler(event, None)
+    response = simple_app.handler(event, None)
 
+    assert simple_app.environ['wsgi.input'].read() == b'The World is Large'
+    assert simple_app.environ['CONTENT_LENGTH'] == str(len(b'The World is Large'))
     assert response == {
         'statusCode': '200',
-        'headers': {'Content-type': 'text/plain'},
-        'body': b'The World Is Large',
+        'headers': {'Content-Type': 'text/plain'},
+        'body': b'Hello World\n',
     }
 
 
-def test_plain_header():
-    def app(environ, start_response):
-        start_response('200 OK', [])
-        val = environ.get('HTTP_TEST_HEADER', '')
-        return BytesIO(val.encode('utf-8'))
-    handler = make_lambda_handler(app)
+def test_querystring_none(simple_app):
+    event = make_event()
+
+    simple_app.handler(event, None)
+
+    assert simple_app.environ['QUERY_STRING'] == ''
+
+
+def test_querystring_one(simple_app):
+    event = make_event(qs_params={'foo': 'bar'})
+
+    simple_app.handler(event, None)
+
+    assert simple_app.environ['QUERY_STRING'] == 'foo=bar'
+
+
+def test_plain_header(simple_app):
     event = make_event(headers={'Test-Header': 'foobar'})
 
-    response = handler(event, None)
+    simple_app.handler(event, None)
 
-    assert response['body'] == b'foobar'
+    assert simple_app.environ['HTTP_TEST_HEADER'] == 'foobar'
 
 
-def test_special_headers():
+def test_special_headers(simple_app):
     event = make_event(headers={
         'Content-Type': 'text/plain',
         'Host': 'example.com',
@@ -79,16 +95,26 @@ def test_special_headers():
         'X-Forwarded-Port': '123',
     })
 
-    def app(environ, start_response):
-        start_response('200 OK', [])
-        app.environ = environ
-        return BytesIO()
-    handler = make_lambda_handler(app)
+    simple_app.handler(event, None)
 
-    handler(event, None)
+    assert simple_app.environ['CONTENT_TYPE'] == 'text/plain'
+    assert simple_app.environ['SERVER_NAME'] == 'example.com'
+    assert simple_app.environ['REMOTE_ADDR'] == '1.2.3.4'
+    assert simple_app.environ['wsgi.url_scheme'] == 'https'
+    assert simple_app.environ['SERVER_PORT'] == '123'
 
-    assert app.environ['CONTENT_TYPE'] == 'text/plain'
-    assert app.environ['SERVER_NAME'] == 'example.com'
-    assert app.environ['REMOTE_ADDR'] == '1.2.3.4'
-    assert app.environ['wsgi.url_scheme'] == 'https'
-    assert app.environ['SERVER_PORT'] == '123'
+
+def test_no_headers(simple_app):
+    # allow headers to be missing from event
+    event = make_event()
+    del event['headers']
+
+    simple_app.handler(event, None)
+
+
+def test_headers_None(simple_app):
+    # allow headers to be 'None' from APIG test console
+    event = make_event()
+    event['headers'] = None
+
+    simple_app.handler(event, None)
