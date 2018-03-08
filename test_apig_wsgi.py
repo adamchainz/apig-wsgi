@@ -42,7 +42,7 @@ def test_get(simple_app):
     assert response == {
         'statusCode': '200',
         'headers': {'Content-Type': 'text/plain'},
-        'body': b'Hello World\n',
+        'body': 'Hello World\n',
     }
 
 
@@ -56,7 +56,7 @@ def test_post(simple_app):
     assert response == {
         'statusCode': '200',
         'headers': {'Content-Type': 'text/plain'},
-        'body': b'Hello World\n',
+        'body': 'Hello World\n',
     }
 
 

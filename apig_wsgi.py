@@ -93,5 +93,5 @@ class Response(object):
         return {
             'statusCode': self.status_code,
             'headers': dict(self.headers),
-            'body': self.body.getvalue()
+            'body': self.body.getvalue().decode('utf-8')
         }
