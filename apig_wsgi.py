@@ -29,13 +29,14 @@ def make_lambda_handler(wsgi_app):
 
 
 def get_environ(event):
+    params = event.get('queryStringParameters') or {}
     body = (event.get('body', '') or '').encode('utf-8')
 
     environ = {
         'CONTENT_LENGTH': str(len(body)),
         'HTTP': 'on',
         'PATH_INFO': event['path'],
-        'QUERY_STRING': urlencode(event.get('queryStringParameters', {})),
+        'QUERY_STRING': urlencode(params),
         'REMOTE_ADDR': '127.0.0.1',
         'REQUEST_METHOD': event['httpMethod'],
         'SCRIPT_NAME': '',
@@ -92,5 +93,5 @@ class Response(object):
         return {
             'statusCode': self.status_code,
             'headers': dict(self.headers),
-            'body': self.body.getvalue()
+            'body': self.body.getvalue().decode('utf-8')
         }

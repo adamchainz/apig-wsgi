@@ -22,8 +22,6 @@ def simple_app():
 
 
 def make_event(method='GET', qs_params=None, headers=None, body=''):
-    if qs_params is None:
-        qs_params = {}
     if headers is None:
         headers = {
             'Host': 'example.com',
@@ -44,7 +42,7 @@ def test_get(simple_app):
     assert response == {
         'statusCode': '200',
         'headers': {'Content-Type': 'text/plain'},
-        'body': b'Hello World\n',
+        'body': 'Hello World\n',
     }
 
 
@@ -58,12 +56,20 @@ def test_post(simple_app):
     assert response == {
         'statusCode': '200',
         'headers': {'Content-Type': 'text/plain'},
-        'body': b'Hello World\n',
+        'body': 'Hello World\n',
     }
 
 
 def test_querystring_none(simple_app):
     event = make_event()
+
+    simple_app.handler(event, None)
+
+    assert simple_app.environ['QUERY_STRING'] == ''
+
+
+def test_querystring_empty(simple_app):
+    event = make_event(qs_params={})
 
     simple_app.handler(event, None)
 
