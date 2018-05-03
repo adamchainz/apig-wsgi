@@ -9,6 +9,7 @@ configparser==3.5.0       # via flake8
 coverage==4.5.1           # via pytest-cov
 docutils==0.14
 enum34==1.1.6             # via flake8
+flake8-commas==2.0.0
 flake8==3.5.0
 funcsigs==1.0.2           # via pytest
 futures==3.1.1
