@@ -59,21 +59,8 @@ def test_get_missing_content_type(simple_app):
     }
 
 
-def test_get_binary(simple_app):
-    simple_app.handler = make_lambda_handler(simple_app, binary_media_types={'text/plain'})
-
-    response = simple_app.handler(make_event(), None)
-
-    assert response == {
-        'statusCode': '200',
-        'headers': {'Content-Type': 'text/plain'},
-        'body': b64encode(b'Hello World\n').decode('utf-8'),
-        'isBase64Encoded': True,
-    }
-
-
-def test_get_binary_non_matching(simple_app):
-    simple_app.handler = make_lambda_handler(simple_app, binary_media_types={'application/octet-stream'})
+def test_get_binary_support_text(simple_app):
+    simple_app.handler = make_lambda_handler(simple_app, binary_support=True)
 
     response = simple_app.handler(make_event(), None)
 
@@ -84,15 +71,17 @@ def test_get_binary_non_matching(simple_app):
     }
 
 
-def test_get_binary_star(simple_app):
-    simple_app.handler = make_lambda_handler(simple_app, binary_media_types={'*/*'})
+def test_get_binary_support_binary(simple_app):
+    simple_app.handler = make_lambda_handler(simple_app, binary_support=True)
+    simple_app.headers = [('Content-Type', 'application/octet-stream')]
+    simple_app.response = b'\x13\x37'
 
     response = simple_app.handler(make_event(), None)
 
     assert response == {
         'statusCode': '200',
-        'headers': {'Content-Type': 'text/plain'},
-        'body': b64encode(b'Hello World\n').decode('utf-8'),
+        'headers': {'Content-Type': 'application/octet-stream'},
+        'body': b64encode(b'\x13\x37').decode('utf-8'),
         'isBase64Encoded': True,
     }
 

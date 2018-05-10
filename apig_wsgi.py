@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
 
-from base64 import b64encode
 import sys
+from base64 import b64encode
 from io import BytesIO
 
 import six
@@ -15,17 +15,14 @@ __version__ = '1.0.0'
 __all__ = ('make_lambda_handler',)
 
 
-def make_lambda_handler(wsgi_app, binary_media_types=None):
+def make_lambda_handler(wsgi_app, binary_support=False):
     """
     Turn a WSGI app callable into a Lambda handler function suitable for
     running on API Gateway.
     """
-    if binary_media_types is None:
-        binary_media_types = []
-
     def handler(event, context):
         environ = get_environ(event)
-        response = Response(binary_media_types=binary_media_types)
+        response = Response(binary_support=binary_support)
         result = wsgi_app(environ, response.start_response)
         response.consume(result)
         return response.as_apig_response()
@@ -74,15 +71,11 @@ def get_environ(event):
 
 
 class Response(object):
-    def __init__(self, binary_media_types):
+    def __init__(self, binary_support):
         self.status_code = '500'
         self.headers = []
         self.body = BytesIO()
-
-        self.binary_media_types = set(binary_media_types)
-        if '*/*' in self.binary_media_types:
-            # everything is binary
-            self.binary_media_types = None
+        self.binary_support = binary_support
 
     def start_response(self, status, response_headers, exc_info=None):
         self.status_code = status.split()[0]
@@ -106,12 +99,13 @@ class Response(object):
 
         content_type = self._get_content_type()
 
-        if self._is_binary_media(content_type):
+        if self.binary_support and not content_type.startswith(('text/', 'application/json')):
             response['isBase64Encoded'] = True
             response['body'] = b64encode(self.body.getvalue()).decode('utf-8')
         else:
             response['body'] = self.body.getvalue().decode('utf-8')
 
+        print(response)
         return response
 
     def _get_content_type(self):
@@ -119,8 +113,3 @@ class Response(object):
         if len(content_type_headers):
             return content_type_headers[-1]
         return None
-
-    def _is_binary_media(self, content_type):
-        if self.binary_media_types is None:
-            return True
-        return content_type in self.binary_media_types
