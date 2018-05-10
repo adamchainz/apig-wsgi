@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import absolute_import, division, print_function, unicode_literals
 
+from base64 import b64encode
 from io import BytesIO
 
 import pytest
@@ -43,6 +44,45 @@ def test_get(simple_app):
         'statusCode': '200',
         'headers': {'Content-Type': 'text/plain'},
         'body': 'Hello World\n',
+    }
+
+
+def test_get_missing_content_type(simple_app):
+    simple_app.headers = []
+
+    response = simple_app.handler(make_event(), None)
+
+    assert response == {
+        'statusCode': '200',
+        'headers': {},
+        'body': 'Hello World\n',
+    }
+
+
+def test_get_binary_support_text(simple_app):
+    simple_app.handler = make_lambda_handler(simple_app, binary_support=True)
+
+    response = simple_app.handler(make_event(), None)
+
+    assert response == {
+        'statusCode': '200',
+        'headers': {'Content-Type': 'text/plain'},
+        'body': 'Hello World\n',
+    }
+
+
+def test_get_binary_support_binary(simple_app):
+    simple_app.handler = make_lambda_handler(simple_app, binary_support=True)
+    simple_app.headers = [('Content-Type', 'application/octet-stream')]
+    simple_app.response = b'\x13\x37'
+
+    response = simple_app.handler(make_event(), None)
+
+    assert response == {
+        'statusCode': '200',
+        'headers': {'Content-Type': 'application/octet-stream'},
+        'body': b64encode(b'\x13\x37').decode('utf-8'),
+        'isBase64Encoded': True,
     }
 
 

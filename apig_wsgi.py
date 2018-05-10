@@ -2,6 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import sys
+from base64 import b64encode
 from io import BytesIO
 
 import six
@@ -14,14 +15,14 @@ __version__ = '1.0.0'
 __all__ = ('make_lambda_handler',)
 
 
-def make_lambda_handler(wsgi_app):
+def make_lambda_handler(wsgi_app, binary_support=False):
     """
     Turn a WSGI app callable into a Lambda handler function suitable for
     running on API Gateway.
     """
     def handler(event, context):
         environ = get_environ(event)
-        response = Response()
+        response = Response(binary_support=binary_support)
         result = wsgi_app(environ, response.start_response)
         response.consume(result)
         return response.as_apig_response()
@@ -70,10 +71,11 @@ def get_environ(event):
 
 
 class Response(object):
-    def __init__(self):
+    def __init__(self, binary_support):
         self.status_code = '500'
         self.headers = []
         self.body = BytesIO()
+        self.binary_support = binary_support
 
     def start_response(self, status, response_headers, exc_info=None):
         self.status_code = status.split()[0]
@@ -90,8 +92,24 @@ class Response(object):
                 result.close()
 
     def as_apig_response(self):
-        return {
+        response = {
             'statusCode': self.status_code,
             'headers': dict(self.headers),
-            'body': self.body.getvalue().decode('utf-8'),
         }
+
+        content_type = self._get_content_type()
+
+        if self.binary_support and not content_type.startswith(('text/', 'application/json')):
+            response['isBase64Encoded'] = True
+            response['body'] = b64encode(self.body.getvalue()).decode('utf-8')
+        else:
+            response['body'] = self.body.getvalue().decode('utf-8')
+
+        print(response)
+        return response
+
+    def _get_content_type(self):
+        content_type_headers = [v for k, v in self.headers if k.lower() == 'content-type']
+        if len(content_type_headers):
+            return content_type_headers[-1]
+        return None

@@ -6,6 +6,9 @@ Pending Release
 
 .. Insert new release notes below this line
 
+* Add ``binary_support`` flag to enable sending binary responses, if enabled on
+  API Gateway.
+
 1.0.0 (2018-03-08)
 ------------------
 
