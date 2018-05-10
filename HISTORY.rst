@@ -6,8 +6,8 @@ Pending Release
 
 .. Insert new release notes below this line
 
-* Support binary data for responses with `Content-Type` headers that aren't
-  `application/json` or start with `text/`.
+* Add ``binary_support`` flag to enable sending binary responses, if enabled on
+  API Gateway.
 
 1.0.0 (2018-03-08)
 ------------------
