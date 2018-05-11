@@ -86,6 +86,21 @@ def test_get_binary_support_binary(simple_app):
     }
 
 
+def test_get_binary_support_no_content_type(simple_app):
+    simple_app.handler = make_lambda_handler(simple_app, binary_support=True)
+    simple_app.headers = []
+    simple_app.response = b'\x13\x37'
+
+    response = simple_app.handler(make_event(), None)
+
+    assert response == {
+        'statusCode': '200',
+        'headers': {},
+        'body': b64encode(b'\x13\x37').decode('utf-8'),
+        'isBase64Encoded': True,
+    }
+
+
 def test_post(simple_app):
     event = make_event(method='POST', body='The World is Large')
 

@@ -6,6 +6,9 @@ Pending Release
 
 .. Insert new release notes below this line
 
+* Fix crash using binary support for responses missing a ``Content-Type``
+  header.
+
 1.1.1 (2018-05-11)
 ------------------
 
