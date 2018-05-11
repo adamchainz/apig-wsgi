@@ -98,8 +98,14 @@ class Response(object):
         }
 
         content_type = self._get_content_type()
+        should_send_binary = (
+            self.binary_support and (
+                content_type is None or
+                not content_type.startswith(('text/', 'application/json'))
+            )
+        )
 
-        if self.binary_support and not content_type.startswith(('text/', 'application/json')):
+        if should_send_binary:
             response['isBase64Encoded'] = True
             response['body'] = b64encode(self.body.getvalue()).decode('utf-8')
         else:
