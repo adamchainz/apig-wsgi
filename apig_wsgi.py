@@ -105,7 +105,6 @@ class Response(object):
         else:
             response['body'] = self.body.getvalue().decode('utf-8')
 
-        print(response)
         return response
 
     def _get_content_type(self):
