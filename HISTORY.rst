@@ -6,6 +6,8 @@ Pending Release
 
 .. Insert new release notes below this line
 
+* Remove debug ``print()``
+
 1.1.0 (2018-05-10)
 ------------------
 
