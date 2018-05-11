@@ -2,7 +2,7 @@
 from __future__ import absolute_import, division, print_function, unicode_literals
 
 import sys
-from base64 import b64encode
+from base64 import b64decode, b64encode
 from io import BytesIO
 
 import six
@@ -21,7 +21,7 @@ def make_lambda_handler(wsgi_app, binary_support=False):
     running on API Gateway.
     """
     def handler(event, context):
-        environ = get_environ(event)
+        environ = get_environ(event, binary_support=binary_support)
         response = Response(binary_support=binary_support)
         result = wsgi_app(environ, response.start_response)
         response.consume(result)
@@ -29,9 +29,14 @@ def make_lambda_handler(wsgi_app, binary_support=False):
     return handler
 
 
-def get_environ(event):
+def get_environ(event, binary_support):
+    method = event['httpMethod']
+    body = event.get('body', '') or ''
+    if event.get('isBase64Encoded', False):
+        body = b64decode(body)
+    else:
+        body = body.encode('utf-8')
     params = event.get('queryStringParameters') or {}
-    body = (event.get('body', '') or '').encode('utf-8')
 
     environ = {
         'CONTENT_LENGTH': str(len(body)),
@@ -39,7 +44,7 @@ def get_environ(event):
         'PATH_INFO': event['path'],
         'QUERY_STRING': urlencode(params),
         'REMOTE_ADDR': '127.0.0.1',
-        'REQUEST_METHOD': event['httpMethod'],
+        'REQUEST_METHOD': method,
         'SCRIPT_NAME': '',
         'SERVER_PROTOCOL': 'HTTP/1.1',
         'wsgi.errors': sys.stderr,
