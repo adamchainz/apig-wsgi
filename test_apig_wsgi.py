@@ -22,19 +22,24 @@ def simple_app():
     yield app
 
 
-def make_event(method='GET', qs_params=None, headers=None, body=''):
+def make_event(method='GET', qs_params=None, headers=None, body='', binary=False):
     if headers is None:
         headers = {
             'Host': 'example.com',
         }
 
-    return {
+    event = {
         'httpMethod': method,
         'path': '/',
         'queryStringParameters': qs_params,
         'headers': headers,
-        'body': body,
     }
+    if binary:
+        event['body'] = b64encode(body.encode('utf-8'))
+        event['isBase64Encoded'] = True
+    else:
+        event['body'] = body
+    return event
 
 
 def test_get(simple_app):
@@ -108,6 +113,21 @@ def test_post(simple_app):
 
     assert simple_app.environ['wsgi.input'].read() == b'The World is Large'
     assert simple_app.environ['CONTENT_LENGTH'] == str(len(b'The World is Large'))
+    assert response == {
+        'statusCode': '200',
+        'headers': {'Content-Type': 'text/plain'},
+        'body': 'Hello World\n',
+    }
+
+
+def test_post_binary_support(simple_app):
+    simple_app.handler = make_lambda_handler(simple_app)
+    event = make_event(method='POST', body='dogfood', binary=True)
+
+    response = simple_app.handler(event, None)
+
+    assert simple_app.environ['wsgi.input'].read() == b'dogfood'
+    assert simple_app.environ['CONTENT_LENGTH'] == str(len(b'dogfood'))
     assert response == {
         'statusCode': '200',
         'headers': {'Content-Type': 'text/plain'},

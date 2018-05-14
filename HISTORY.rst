@@ -6,6 +6,8 @@ Pending Release
 
 .. Insert new release notes below this line
 
+* Work with base64 encoded ``body`` values in requests from API Gateway.
+
 1.1.2 (2018-05-11)
 ------------------
 
