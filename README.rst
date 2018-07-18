@@ -45,8 +45,9 @@ Usage
 If you want to support sending binary responses, set ``binary_support`` to
 ``True`` and make sure you have ``'*/*'`` in the 'binary media types'
 configuration on your Rest API on API Gateway. Note, whilst API Gateway
-supports a list of media types, using '*/*' is the best way to do it, since it
-is used to match the request 'Accept' header as well.
+supports a list of binary media types, using ``'*/*'`` is the best way to do
+it, since it is used to match the request 'Accept' header as well, which most
+applications ignore.
 
 Note that binary responses aren't sent if your response has a 'Content-Type'
 starting 'text/html' or 'application/json' - this is to support sending larger
