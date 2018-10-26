@@ -31,7 +31,7 @@ Use **pip**:
 
     pip install apig-wsgi
 
-Tested on Python 2.7 and Python 3.6.
+Tested on Python versions 2.7 and 3.7.
 
 Usage
 =====
