@@ -26,7 +26,7 @@ with codecs.open('HISTORY.rst', 'r', 'utf-8') as history_file:
 setup(
     name='apig-wsgi',
     version=version,
-    description='Wrap a WSGI application in an AWS Lambda handler function for running on API Gateway.',
+    description='Wrap a WSGI application in an AWS Lambda handler function for running on API Gateway or an ALB.',
     long_description=readme + '\n\n' + history,
     author='Adam Johnson',
     author_email='me@adamj.eu',

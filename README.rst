@@ -9,7 +9,7 @@ apig-wsgi
         :target: https://pypi.python.org/pypi/apig-wsgi
 
 Wrap a WSGI application in an AWS Lambda handler function for running on
-API Gateway.
+API Gateway or an ALB.
 
 A quick example:
 
@@ -43,11 +43,11 @@ Usage
 ``Flask()`` object.
 
 If you want to support sending binary responses, set ``binary_support`` to
-``True`` and make sure you have ``'*/*'`` in the 'binary media types'
-configuration on your Rest API on API Gateway. Note, whilst API Gateway
-supports a list of binary media types, using ``'*/*'`` is the best way to do
-it, since it is used to match the request 'Accept' header as well, which most
-applications ignore.
+``True``. ALB's support binary responses by default, but on API Gateway you
+need to make sure you have ``'*/*'`` in the 'binary media types' configuration
+on your Rest API (whilst API Gateway supports a list of binary media types,
+using ``'*/*'`` is the best way to do it, since it is used to match the request
+'Accept' header as well, which WSGI applications are likely to ignore).
 
 Note that binary responses aren't sent if your response has a 'Content-Type'
 starting 'text/html' or 'application/json' - this is to support sending larger
