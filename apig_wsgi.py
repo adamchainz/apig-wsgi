@@ -1,12 +1,7 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import, division, print_function, unicode_literals
-
 import sys
 from base64 import b64decode, b64encode
 from io import BytesIO
-
-import six
-from six.moves.urllib_parse import urlencode
+from urllib.parse import urlencode
 
 __author__ = 'Adam Johnson'
 __email__ = 'me@adamj.eu'
@@ -56,7 +51,7 @@ def get_environ(event, binary_support):
     }
 
     headers = event.get('headers') or {}  # may be None when testing on console
-    for key, value in six.iteritems(headers):
+    for key, value in headers.items():
         key = key.upper().replace('-', '_')
 
         if key == 'CONTENT_TYPE':
