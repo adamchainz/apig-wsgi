@@ -6,11 +6,18 @@ Pending Release
 
 .. Insert new release notes below this line
 
+
+2.0.0 (2019-01-28)
+------------------
+
+* Drop Python 2 support, only Python 3.4+ is supported now.
 * If ``exc_info`` is passed in, re-raise the exception (previously it would be
   ignored and crash in a different way). This isn't the nicest experience,
   however the behaviour is copied from ``wsgiref``\'s simple server, and most
   WSGI applications implement their own exception conversion to a "500 Internal
   Server Error" page already.
+* Noted that the EC2 ALB to Lambda integration is also supported as it uses the
+  same event format as API Gateway.
 
 1.2.0 (2018-05-14)
 ------------------
