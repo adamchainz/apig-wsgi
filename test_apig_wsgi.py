@@ -1,3 +1,4 @@
+import sys
 from base64 import b64encode
 from io import BytesIO
 
@@ -10,12 +11,13 @@ from apig_wsgi import make_lambda_handler
 def simple_app():
     def app(environ, start_response):
         app.environ = environ
-        start_response('200 OK', app.headers)
+        start_response('200 OK', app.headers, app.exc_info)
         return BytesIO(app.response)
 
     app.headers = [('Content-Type', 'text/plain')]
     app.response = b'Hello World\n'
     app.handler = make_lambda_handler(app)
+    app.exc_info = None
     yield app
 
 
@@ -196,3 +198,15 @@ def test_headers_None(simple_app):
     event['headers'] = None
 
     simple_app.handler(event, None)
+
+
+def test_exc_info(simple_app):
+    try:
+        raise ValueError('Example exception')
+    except ValueError:
+        simple_app.exc_info = sys.exc_info()
+
+    with pytest.raises(ValueError) as excinfo:
+        simple_app.handler(make_event(), None)
+
+    assert str(excinfo.value) == 'Example exception'

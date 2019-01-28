@@ -78,6 +78,8 @@ class Response(object):
         self.binary_support = binary_support
 
     def start_response(self, status, response_headers, exc_info=None):
+        if exc_info is not None:
+            raise exc_info[0](exc_info[1]).with_traceback(exc_info[2])
         self.status_code = status.split()[0]
         self.headers.extend(response_headers)
         return self.body.write
