@@ -6,6 +6,12 @@ Pending Release
 
 .. Insert new release notes below this line
 
+* If ``exc_info`` is passed in, re-raise the exception (previously it would be
+  ignored and crash in a different way). This isn't the nicest experience,
+  however the behaviour is copied from ``wsgiref``\'s simple server, and most
+  WSGI applications implement their own exception conversion to a "500 Internal
+  Server Error" page already.
+
 1.2.0 (2018-05-14)
 ------------------
 
