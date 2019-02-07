@@ -10,7 +10,7 @@ from six.moves.urllib_parse import urlencode
 
 __author__ = 'Adam Johnson'
 __email__ = 'me@adamj.eu'
-__version__ = '2.0.0'
+__version__ = '2.0.1'
 
 __all__ = ('make_lambda_handler',)
 

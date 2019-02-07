@@ -6,6 +6,9 @@ Pending Release
 
 .. Insert new release notes below this line
 
+2.0.1 (2019-02-07)
+------------------
+
 * Temporarily restore Python 2 support. This is in order to fix a packaging
   metadata issue that 2.0.0 was marked as supporting Python 2, so a new release
   is needed with a higher version number for ``pip install apig-wsgi`` to
