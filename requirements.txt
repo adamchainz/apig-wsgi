@@ -6,20 +6,14 @@
 #
 atomicwrites==1.2.1       # via pytest
 attrs==18.2.0             # via pytest
-configparser==3.7.1       # via flake8
 coverage==4.5.2           # via pytest-cov
 docutils==0.14
-enum34==1.1.6             # via flake8
 flake8-commas==2.0.0
 flake8==3.6.0
-funcsigs==1.0.2           # via pytest
-futures==3.1.1
 isort==4.3.4
 mccabe==0.6.1             # via flake8
-modernize==0.6.1
 more-itertools==5.0.0     # via pytest
 multilint==2.4.0
-pathlib2==2.3.3           # via pytest
 pluggy==0.8.1             # via pytest
 py==1.7.0                 # via pytest
 pycodestyle==2.4.0        # via flake8
@@ -27,5 +21,4 @@ pyflakes==2.0.0           # via flake8
 pygments==2.3.1
 pytest-cov==2.6.1
 pytest==4.1.1
-scandir==1.9.0            # via pathlib2
-six==1.12.0
+six==1.12.0               # via more-itertools, multilint, pytest
