@@ -1,7 +1,12 @@
+# -*- coding: utf-8 -*-
+from __future__ import absolute_import, division, print_function, unicode_literals
+
 import sys
 from base64 import b64decode, b64encode
 from io import BytesIO
-from urllib.parse import urlencode
+
+import six
+from six.moves.urllib_parse import urlencode
 
 __author__ = 'Adam Johnson'
 __email__ = 'me@adamj.eu'
@@ -51,7 +56,7 @@ def get_environ(event, binary_support):
     }
 
     headers = event.get('headers') or {}  # may be None when testing on console
-    for key, value in headers.items():
+    for key, value in six.iteritems(headers):
         key = key.upper().replace('-', '_')
 
         if key == 'CONTENT_TYPE':
@@ -79,7 +84,7 @@ class Response(object):
 
     def start_response(self, status, response_headers, exc_info=None):
         if exc_info is not None:
-            raise exc_info[0](exc_info[1]).with_traceback(exc_info[2])
+            six.reraise(exc_info[0], exc_info[1], exc_info[2])
         self.status_code = status.split()[0]
         self.headers.extend(response_headers)
         return self.body.write
