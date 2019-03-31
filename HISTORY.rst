@@ -6,6 +6,9 @@ Pending Release
 
 .. Insert new release notes below this line
 
+2.1.0 (2019-03-31)
+------------------
+
 * Change ``statusCode`` returned to API Gateway / ALB to an integer. It seems
   API Gateway always supported both strings and integers, whilst API Gateway
   only supports integers.
