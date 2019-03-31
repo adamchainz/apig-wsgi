@@ -72,7 +72,7 @@ def get_environ(event, binary_support):
 
 class Response(object):
     def __init__(self, binary_support):
-        self.status_code = '500'
+        self.status_code = 500
         self.headers = []
         self.body = BytesIO()
         self.binary_support = binary_support
@@ -80,7 +80,7 @@ class Response(object):
     def start_response(self, status, response_headers, exc_info=None):
         if exc_info is not None:
             raise exc_info[0](exc_info[1]).with_traceback(exc_info[2])
-        self.status_code = status.split()[0]
+        self.status_code = int(status.split()[0])
         self.headers.extend(response_headers)
         return self.body.write
 
