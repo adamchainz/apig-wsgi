@@ -6,6 +6,9 @@ Pending Release
 
 .. Insert new release notes below this line
 
+2.1.1 (2019-03-31)
+------------------
+
 * Revert adding ``statusDescription`` because it turns out API Gateway doesn't
   ignore it but instead fails the response with an internal server error.
 
