@@ -46,6 +46,7 @@ def test_get(simple_app):
 
     assert response == {
         'statusCode': 200,
+        'statusDescription': '200 OK',
         'headers': {'Content-Type': 'text/plain'},
         'body': 'Hello World\n',
     }
@@ -58,6 +59,7 @@ def test_get_missing_content_type(simple_app):
 
     assert response == {
         'statusCode': 200,
+        'statusDescription': '200 OK',
         'headers': {},
         'body': 'Hello World\n',
     }
@@ -70,6 +72,7 @@ def test_get_binary_support_text(simple_app):
 
     assert response == {
         'statusCode': 200,
+        'statusDescription': '200 OK',
         'headers': {'Content-Type': 'text/plain'},
         'body': 'Hello World\n',
     }
@@ -84,6 +87,7 @@ def test_get_binary_support_binary(simple_app):
 
     assert response == {
         'statusCode': 200,
+        'statusDescription': '200 OK',
         'headers': {'Content-Type': 'application/octet-stream'},
         'body': b64encode(b'\x13\x37').decode('utf-8'),
         'isBase64Encoded': True,
@@ -99,6 +103,7 @@ def test_get_binary_support_no_content_type(simple_app):
 
     assert response == {
         'statusCode': 200,
+        'statusDescription': '200 OK',
         'headers': {},
         'body': b64encode(b'\x13\x37').decode('utf-8'),
         'isBase64Encoded': True,
@@ -114,6 +119,7 @@ def test_post(simple_app):
     assert simple_app.environ['CONTENT_LENGTH'] == str(len(b'The World is Large'))
     assert response == {
         'statusCode': 200,
+        'statusDescription': '200 OK',
         'headers': {'Content-Type': 'text/plain'},
         'body': 'Hello World\n',
     }
@@ -129,6 +135,7 @@ def test_post_binary_support(simple_app):
     assert simple_app.environ['CONTENT_LENGTH'] == str(len(b'dogfood'))
     assert response == {
         'statusCode': 200,
+        'statusDescription': '200 OK',
         'headers': {'Content-Type': 'text/plain'},
         'body': 'Hello World\n',
     }
