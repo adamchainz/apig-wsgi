@@ -16,8 +16,8 @@ Pending Release
 ------------------
 
 * Change ``statusCode`` returned to API Gateway / ALB to an integer. It seems
-  API Gateway always supported both strings and integers, whilst API Gateway
-  only supports integers.
+  API Gateway always supported both strings and integers, whilst ALB only
+  supports integers.
 * Add ``statusDescription`` in return value. API Gateway doesn't seem to use
   this whilst the `ALB documentation <https://docs.aws.amazon.com/elasticloadbalancing/latest/application/lambda-functions.html>`_
   mentions it as supported.
