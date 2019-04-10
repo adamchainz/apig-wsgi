@@ -210,3 +210,12 @@ def test_exc_info(simple_app):
         simple_app.handler(make_event(), None)
 
     assert str(excinfo.value) == 'Example exception'
+
+
+def test_authorization_header(simple_app):
+    event = make_event()
+    event['requestContext'] = {'authorizer': {'user': 'test@example.com'}}
+
+    simple_app.handler(event, None)
+
+    assert simple_app.environ['HTTP_X_AUTHORIZER_USER'] == 'test@example.com'

@@ -67,6 +67,12 @@ def get_environ(event, binary_support):
 
         environ['HTTP_' + key] = value
 
+    request_context = event.get("requestContext") or {}
+    authorizer = request_context.get("authorizer") or {}
+    for key, value in authorizer.items():
+        key = key.upper().replace("-", "_")
+        environ["HTTP_X_AUTHORIZER_" + key] = value
+
     return environ
 
 
