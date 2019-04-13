@@ -1,3 +1,4 @@
+import json
 import sys
 from base64 import b64decode, b64encode
 from io import BytesIO
@@ -67,11 +68,10 @@ def get_environ(event, binary_support):
 
         environ['HTTP_' + key] = value
 
+    # Sends any extra context passed by a custom lambda authorizer
     request_context = event.get("requestContext") or {}
-    authorizer = request_context.get("authorizer") or {}
-    for key, value in authorizer.items():
-        key = key.upper().replace("-", "_")
-        environ["HTTP_X_AUTHORIZER_" + key] = value
+    if "authorizer" in request_context:
+        environ["AUTHORIZER"] = json.dumps(request_context["authorizer"])
 
     return environ
 
