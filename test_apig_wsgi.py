@@ -1,4 +1,3 @@
-import json
 import sys
 from base64 import b64encode
 from io import BytesIO
@@ -213,11 +212,11 @@ def test_exc_info(simple_app):
     assert str(excinfo.value) == 'Example exception'
 
 
-def test_custom_authorizer(simple_app):
+def test_request_context(simple_app):
     context = {'authorizer': {'user': 'test@example.com'}}
     event = make_event()
     event['requestContext'] = context
 
     simple_app.handler(event, None)
 
-    assert json.loads(simple_app.environ['AUTHORIZER']) == context['authorizer']
+    assert simple_app.environ['REQUEST_CONTEXT'] == context
