@@ -67,6 +67,10 @@ def get_environ(event, binary_support):
 
         environ['HTTP_' + key] = value
 
+    # Pass the AWS requestContext to the application
+    if 'requestContext' in event:
+        environ['apig_wsgi.request_context'] = event['requestContext']
+
     return environ
 
 

@@ -21,7 +21,7 @@ def simple_app():
     yield app
 
 
-def make_event(method='GET', qs_params=None, headers=None, body='', binary=False):
+def make_event(method='GET', qs_params=None, headers=None, body='', binary=False, request_context=None):
     if headers is None:
         headers = {
             'Host': 'example.com',
@@ -33,11 +33,16 @@ def make_event(method='GET', qs_params=None, headers=None, body='', binary=False
         'queryStringParameters': qs_params,
         'headers': headers,
     }
+
     if binary:
         event['body'] = b64encode(body.encode('utf-8'))
         event['isBase64Encoded'] = True
     else:
         event['body'] = body
+
+    if request_context is not None:
+        event['requestContext'] = request_context
+
     return event
 
 
@@ -210,3 +215,12 @@ def test_exc_info(simple_app):
         simple_app.handler(make_event(), None)
 
     assert str(excinfo.value) == 'Example exception'
+
+
+def test_request_context(simple_app):
+    context = {'authorizer': {'user': 'test@example.com'}}
+    event = make_event(request_context=context)
+
+    simple_app.handler(event, None)
+
+    assert simple_app.environ['apig_wsgi.request_context'] == context
