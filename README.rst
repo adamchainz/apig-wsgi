@@ -52,3 +52,7 @@ using ``'*/*'`` is the best way to do it, since it is used to match the request
 Note that binary responses aren't sent if your response has a 'Content-Type'
 starting 'text/html' or 'application/json' - this is to support sending larger
 text responses.
+
+If the event from API Gateway contains the ``requestContext`` key, for example
+from custom request authorizers, this will be available in the WSGI environ
+at the key ``apig_wsgi.request_context``.
