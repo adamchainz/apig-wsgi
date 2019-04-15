@@ -6,6 +6,9 @@ Pending Release
 
 .. Insert new release notes below this line
 
+2.2.0 (2019-04-15)
+------------------
+
 * If API Gateway event includes ``requestContext``, for example for custom
   authorizers, pass it in the WSGI ``environ`` as
   ``apig_wsgi.request_context``.

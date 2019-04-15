@@ -5,7 +5,7 @@ from urllib.parse import urlencode
 
 __author__ = 'Adam Johnson'
 __email__ = 'me@adamj.eu'
-__version__ = '2.1.1'
+__version__ = '2.2.0'
 
 __all__ = ('make_lambda_handler',)
 
