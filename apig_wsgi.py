@@ -10,13 +10,17 @@ __version__ = '2.2.0'
 __all__ = ('make_lambda_handler',)
 
 
-def make_lambda_handler(wsgi_app, binary_support=False):
+def make_lambda_handler(wsgi_app, binary_support=False, extra_environ=None):
     """
     Turn a WSGI app callable into a Lambda handler function suitable for
     running on API Gateway.
     """
     def handler(event, context):
-        environ = get_environ(event, binary_support=binary_support)
+        environ = get_environ(
+            event,
+            binary_support=binary_support,
+            extra_environ=extra_environ,
+        )
         response = Response(binary_support=binary_support)
         result = wsgi_app(environ, response.start_response)
         response.consume(result)
@@ -24,7 +28,7 @@ def make_lambda_handler(wsgi_app, binary_support=False):
     return handler
 
 
-def get_environ(event, binary_support):
+def get_environ(event, binary_support, extra_environ):
     method = event['httpMethod']
     body = event.get('body', '') or ''
     if event.get('isBase64Encoded', False):
@@ -70,6 +74,9 @@ def get_environ(event, binary_support):
     # Pass the AWS requestContext to the application
     if 'requestContext' in event:
         environ['apig_wsgi.request_context'] = event['requestContext']
+
+    if extra_environ:
+        environ.update(extra_environ)
 
     return environ
 
