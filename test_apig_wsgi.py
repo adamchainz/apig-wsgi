@@ -228,9 +228,14 @@ def test_request_context(simple_app):
 
 def test_extra_environ(simple_app):
     event = make_event()
-    extra_environ = {'SCRIPT_NAME': 'test'}
 
+    simple_app.handler = make_lambda_handler(simple_app)
+    simple_app.handler(event, None)
+
+    assert simple_app.environ['SCRIPT_NAME'] == ''
+
+    extra_environ = {'SCRIPT_NAME': 'test'}
     simple_app.handler = make_lambda_handler(simple_app, extra_environ=extra_environ)
-    response = simple_app.handler(event, None)
+    simple_app.handler(event, None)
 
     assert simple_app.environ['SCRIPT_NAME'] == 'test'
