@@ -8,6 +8,9 @@ apig-wsgi
 .. image:: https://img.shields.io/pypi/v/apig-wsgi.svg
         :target: https://pypi.python.org/pypi/apig-wsgi
 
+.. image:: https://img.shields.io/badge/code%20style-black-000000.svg
+    :target: https://github.com/python/black
+
 Wrap a WSGI application in an AWS Lambda handler function for running on
 API Gateway or an ALB.
 
