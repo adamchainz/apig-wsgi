@@ -22,7 +22,10 @@ with open("HISTORY.rst", "r") as history_file:
 setup(
     name="apig-wsgi",
     version=version,
-    description="Wrap a WSGI application in an AWS Lambda handler function for running on API Gateway or an ALB.",
+    description=(
+        "Wrap a WSGI application in an AWS Lambda handler function for "
+        + "running on API Gateway or an ALB."
+    ),
     long_description=readme + "\n\n" + history,
     author="Adam Johnson",
     author_email="me@adamj.eu",
