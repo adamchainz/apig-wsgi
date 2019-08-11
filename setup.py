@@ -30,6 +30,9 @@ setup(
     author="Adam Johnson",
     author_email="me@adamj.eu",
     url="https://github.com/adamchainz/apig-wsgi",
+    project_urls={
+        "Changelog": "https://github.com/adamchainz/apig-wsgi/blob/master/HISTORY.rst"
+    },
     py_modules=["apig_wsgi"],
     include_package_data=True,
     install_requires=[],
