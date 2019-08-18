@@ -21,6 +21,11 @@ def simple_app():
     yield app
 
 
+@pytest.fixture(params=("text/plain", "text/html", "application/json"))
+def text_content_type(request):
+    return request.param
+
+
 def make_event(
     method="GET",
     qs_params=None,
@@ -69,14 +74,14 @@ def test_get_missing_content_type(simple_app):
     assert response == {"statusCode": 200, "headers": {}, "body": "Hello World\n"}
 
 
-def test_get_binary_support_text(simple_app):
+def test_get_binary_support_text(simple_app, text_content_type):
     simple_app.handler = make_lambda_handler(simple_app, binary_support=True)
+    simple_app.headers = [("Content-Type", text_content_type)]
 
     response = simple_app.handler(make_event(), None)
-
     assert response == {
         "statusCode": 200,
-        "headers": {"Content-Type": "text/plain"},
+        "headers": {"Content-Type": text_content_type},
         "body": "Hello World\n",
     }
 
@@ -91,6 +96,26 @@ def test_get_binary_support_binary(simple_app):
     assert response == {
         "statusCode": 200,
         "headers": {"Content-Type": "application/octet-stream"},
+        "body": b64encode(b"\x13\x37").decode("utf-8"),
+        "isBase64Encoded": True,
+    }
+
+
+def test_get_binary_support_binary_text_with_gzip_content_encoding(
+    simple_app, text_content_type
+):
+    simple_app.handler = make_lambda_handler(simple_app, binary_support=True)
+    simple_app.headers = [
+        ("Content-Type", text_content_type),
+        ("Content-Encoding", "gzip"),
+    ]
+    simple_app.response = b"\x13\x37"
+
+    response = simple_app.handler(make_event(), None)
+
+    assert response == {
+        "statusCode": 200,
+        "headers": {"Content-Type": text_content_type, "Content-Encoding": "gzip"},
         "body": b64encode(b"\x13\x37").decode("utf-8"),
         "isBase64Encoded": True,
     }
