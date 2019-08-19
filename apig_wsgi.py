@@ -101,14 +101,7 @@ class Response(object):
 
     def as_apig_response(self):
         response = {"statusCode": self.status_code, "headers": dict(self.headers)}
-
-        content_type = self._get_content_type()
-        should_send_binary = self.binary_support and (
-            content_type is None
-            or not content_type.startswith(("text/", "application/json"))
-        )
-
-        if should_send_binary:
+        if self._should_send_binary():
             response["isBase64Encoded"] = True
             response["body"] = b64encode(self.body.getvalue()).decode("utf-8")
         else:
@@ -116,10 +109,31 @@ class Response(object):
 
         return response
 
+    def _should_send_binary(self):
+        """
+        Determines if binary response should be sent to API Gateway
+        """
+        if not self.binary_support:
+            return False
+
+        content_type = self._get_content_type()
+        non_binary_content_types = ("text/", "application/json")
+        if not content_type.startswith(non_binary_content_types):
+            return True
+
+        content_encoding = self._get_content_encoding()
+        # Content type is non-binary but the content encoding might be.
+        return "gzip" in content_encoding.lower()
+
     def _get_content_type(self):
-        content_type_headers = [
-            v for k, v in self.headers if k.lower() == "content-type"
-        ]
-        if len(content_type_headers):
-            return content_type_headers[-1]
+        return self._get_header("content-type") or ""
+
+    def _get_content_encoding(self):
+        return self._get_header("content-encoding") or ""
+
+    def _get_header(self, header_name):
+        header_name = header_name.lower()
+        matching_headers = [v for k, v in self.headers if k.lower() == header_name]
+        if len(matching_headers):
+            return matching_headers[-1]
         return None
