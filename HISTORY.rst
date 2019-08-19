@@ -7,7 +7,7 @@ Pending Release
 .. Insert new release notes below this line
 
 * Update Python support to 3.5-3.7, as 3.4 has reached its end of life.
-* Return binary content for gzipped responses with text/json content types.
+* Return binary content for gzipped responses with text or JSON content types.
 
 2.2.0 (2019-04-15)
 ------------------

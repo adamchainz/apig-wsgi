@@ -113,20 +113,17 @@ class Response(object):
         """
         Determines if binary response should be sent to API Gateway
         """
-        non_binary_content_types = ("text/", "application/json")
+        if not self.binary_support:
+            return False
 
         content_type = self._get_content_type()
-        content_encoding = self._get_content_encoding()
-
-        is_binary_content_type = not content_type.startswith(non_binary_content_types)
-
-        if self.binary_support and is_binary_content_type:
+        non_binary_content_types = ("text/", "application/json")
+        if not content_type.startswith(non_binary_content_types):
             return True
-        elif self.binary_support and not is_binary_content_type:
-            # Content type is non-binary but the content encoding might be.
-            return "gzip" in content_encoding.lower()
 
-        return False
+        content_encoding = self._get_content_encoding()
+        # Content type is non-binary but the content encoding might be.
+        return "gzip" in content_encoding.lower()
 
     def _get_content_type(self):
         return self._get_header("content-type") or ""
