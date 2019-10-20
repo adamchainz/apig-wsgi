@@ -3,10 +3,6 @@ from base64 import b64decode, b64encode
 from io import BytesIO
 from urllib.parse import urlencode
 
-__author__ = "Adam Johnson"
-__email__ = "me@adamj.eu"
-__version__ = "2.3.0"
-
 __all__ = ("make_lambda_handler",)
 
 
