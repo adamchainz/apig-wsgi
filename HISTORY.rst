@@ -9,8 +9,9 @@ Pending Release
 * Converted setuptools metadata to configuration file. This meant removing the
   ``__version__`` attribute from the package. If you want to inspect the
   installed version, use
-  ``pkg_resources.get_distribution("apig-wsgi").version``
-  (`docs <https://setuptools.readthedocs.io/en/latest/pkg_resources.html#getting-or-creating-distributions>`__).
+  ``importlib.metadata.version("apig-wsgi")``
+  (`docs <https://docs.python.org/3.8/library/importlib.metadata.html#distribution-versions>`__ /
+  `backport <https://pypi.org/project/importlib-metadata/>`__).
 
 2.3.0 (2019-08-19)
 ------------------
