@@ -2,9 +2,12 @@ black ; python_version == '3.7.*'
 docutils
 flake8
 flake8-bugbear
+flake8-comprehensions
+flake8-tidy-imports
 isort
 multilint
 pygments
 pytest
 pytest-cov
+pytest-randomly
 twine
