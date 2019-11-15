@@ -39,8 +39,8 @@ Python 3.5-3.8 supported.
 Usage
 =====
 
-``make_lambda_handler(app, binary_support=False)``
---------------------------------------------------
+``make_lambda_handler(app, binary_support=False, non_binary_content_type_prefixes=None)``
+-----------------------------------------------------------------------------------------
 
 ``app`` should be a WSGI app, for example from Django's ``wsgi.py`` or Flask's
 ``Flask()`` object.
@@ -53,8 +53,10 @@ using ``'*/*'`` is the best way to do it, since it is used to match the request
 'Accept' header as well, which WSGI applications are likely to ignore).
 
 Note that binary responses aren't sent if your response has a 'Content-Type'
-starting 'text/html' or 'application/json' - this is to support sending larger
-text responses.
+starting 'text/', 'application/json' or 'application/vnd.api+json' - this
+is to support sending larger text responses. To support other content types
+than the ones specified above, you can set `non_binary_content_type_prefixes`
+to a list of content type prefixes of your choice.
 
 If the event from API Gateway contains the ``requestContext`` key, for example
 from custom request authorizers, this will be available in the WSGI environ

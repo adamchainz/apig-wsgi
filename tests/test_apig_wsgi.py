@@ -6,6 +6,8 @@ import pytest
 
 from apig_wsgi import make_lambda_handler
 
+CUSTOM_NON_BINARY_CONTENT_TYPE_PREFIXES = ["test/custom", "application/vnd.custom"]
+
 
 @pytest.fixture()
 def simple_app():
@@ -21,8 +23,14 @@ def simple_app():
     yield app
 
 
-parametrize_text_content_type = pytest.mark.parametrize(
-    "text_content_type", ["text/plain", "text/html", "application/json"]
+parametrize_default_text_content_type = pytest.mark.parametrize(
+    "text_content_type",
+    ["text/plain", "text/html", "application/json", "application/vnd.api+json"],
+)
+
+
+parametrize_custom_text_content_type = pytest.mark.parametrize(
+    "text_content_type", CUSTOM_NON_BINARY_CONTENT_TYPE_PREFIXES
 )
 
 
@@ -74,9 +82,26 @@ def test_get_missing_content_type(simple_app):
     assert response == {"statusCode": 200, "headers": {}, "body": "Hello World\n"}
 
 
-@parametrize_text_content_type
-def test_get_binary_support_text(simple_app, text_content_type):
+@parametrize_default_text_content_type
+def test_get_binary_support_default_text_content_types(simple_app, text_content_type):
     simple_app.handler = make_lambda_handler(simple_app, binary_support=True)
+    simple_app.headers = [("Content-Type", text_content_type)]
+
+    response = simple_app.handler(make_event(), None)
+    assert response == {
+        "statusCode": 200,
+        "headers": {"Content-Type": text_content_type},
+        "body": "Hello World\n",
+    }
+
+
+@parametrize_custom_text_content_type
+def test_get_binary_support_custom_text_content_types(simple_app, text_content_type):
+    simple_app.handler = make_lambda_handler(
+        simple_app,
+        binary_support=True,
+        non_binary_content_type_prefixes=CUSTOM_NON_BINARY_CONTENT_TYPE_PREFIXES,
+    )
     simple_app.headers = [("Content-Type", text_content_type)]
 
     response = simple_app.handler(make_event(), None)
@@ -102,11 +127,36 @@ def test_get_binary_support_binary(simple_app):
     }
 
 
-@parametrize_text_content_type
-def test_get_binary_support_binary_text_with_gzip_content_encoding(
+@parametrize_default_text_content_type
+def test_get_binary_support_binary_default_text_with_gzip_content_encoding(
     simple_app, text_content_type
 ):
     simple_app.handler = make_lambda_handler(simple_app, binary_support=True)
+    simple_app.headers = [
+        ("Content-Type", text_content_type),
+        ("Content-Encoding", "gzip"),
+    ]
+    simple_app.response = b"\x13\x37"
+
+    response = simple_app.handler(make_event(), None)
+
+    assert response == {
+        "statusCode": 200,
+        "headers": {"Content-Type": text_content_type, "Content-Encoding": "gzip"},
+        "body": b64encode(b"\x13\x37").decode("utf-8"),
+        "isBase64Encoded": True,
+    }
+
+
+@parametrize_custom_text_content_type
+def test_get_binary_support_binary_custom_text_with_gzip_content_encoding(
+    simple_app, text_content_type
+):
+    simple_app.handler = make_lambda_handler(
+        simple_app,
+        binary_support=True,
+        non_binary_content_type_prefixes=CUSTOM_NON_BINARY_CONTENT_TYPE_PREFIXES,
+    )
     simple_app.headers = [
         ("Content-Type", text_content_type),
         ("Content-Encoding", "gzip"),

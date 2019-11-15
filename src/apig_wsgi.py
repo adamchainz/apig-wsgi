@@ -5,16 +5,41 @@ from urllib.parse import urlencode
 
 __all__ = ("make_lambda_handler",)
 
+DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES = (
+    "text/",
+    "application/json",
+    "application/vnd.api+json",
+)
 
-def make_lambda_handler(wsgi_app, binary_support=False):
+
+def make_lambda_handler(
+    wsgi_app, binary_support=False, non_binary_content_type_prefixes=None
+):
     """
     Turn a WSGI app callable into a Lambda handler function suitable for
     running on API Gateway.
+
+    Parameters
+    ----------
+    wsgi_app : function
+        WSGI Application callable
+    binary_support : bool
+        Whether to support returning APIG-compatible binary responses
+    non_binary_content_type_prefixes : tuple of str
+        Tuple of content type prefixes which should be considered "Non-Binary" when
+        `binray_support` is True. This prevents apig_wsgi from unexpectedly encoding
+        non-binary responses as binary.
     """
+    if non_binary_content_type_prefixes is None:
+        non_binary_content_type_prefixes = DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES
+    non_binary_content_type_prefixes = tuple(non_binary_content_type_prefixes)
 
     def handler(event, context):
         environ = get_environ(event, binary_support=binary_support)
-        response = Response(binary_support=binary_support)
+        response = Response(
+            binary_support=binary_support,
+            non_binary_content_type_prefixes=non_binary_content_type_prefixes,
+        )
         result = wsgi_app(environ, response.start_response)
         response.consume(result)
         return response.as_apig_response()
@@ -73,11 +98,12 @@ def get_environ(event, binary_support):
 
 
 class Response(object):
-    def __init__(self, binary_support):
+    def __init__(self, binary_support, non_binary_content_type_prefixes):
         self.status_code = 500
         self.headers = []
         self.body = BytesIO()
         self.binary_support = binary_support
+        self.non_binary_content_type_prefixes = non_binary_content_type_prefixes
 
     def start_response(self, status, response_headers, exc_info=None):
         if exc_info is not None:
@@ -113,8 +139,7 @@ class Response(object):
             return False
 
         content_type = self._get_content_type()
-        non_binary_content_types = ("text/", "application/json")
-        if not content_type.startswith(non_binary_content_types):
+        if not content_type.startswith(self.non_binary_content_type_prefixes):
             return True
 
         content_encoding = self._get_content_encoding()

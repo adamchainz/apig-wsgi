@@ -13,6 +13,9 @@ Pending Release
   (`docs <https://docs.python.org/3.8/library/importlib.metadata.html#distribution-versions>`__ /
   `backport <https://pypi.org/project/importlib-metadata/>`__).
 * Update Python support to 3.5-3.8.
+* Add `application/vnd.api+json` to default non-binary content type prefixes.
+* Add support for custom non-binary content type prefixes. This lets you control
+  which content types should be treated as plain text when binary support is enabled.
 
 2.3.0 (2019-08-19)
 ------------------
