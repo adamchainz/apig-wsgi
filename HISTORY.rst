@@ -1,10 +1,8 @@
 History
 =======
 
-Pending Release
----------------
-
-.. Insert new release notes below this line
+2.4.0 (2019-11-15)
+------------------
 
 * Converted setuptools metadata to configuration file. This meant removing the
   ``__version__`` attribute from the package. If you want to inspect the
@@ -12,7 +10,7 @@ Pending Release
   ``importlib.metadata.version("apig-wsgi")``
   (`docs <https://docs.python.org/3.8/library/importlib.metadata.html#distribution-versions>`__ /
   `backport <https://pypi.org/project/importlib-metadata/>`__).
-* Update Python support to 3.5-3.8.
+* Support Python 3.8.
 * Add `application/vnd.api+json` to default non-binary content type prefixes.
 * Add support for custom non-binary content type prefixes. This lets you control
   which content types should be treated as plain text when binary support is enabled.
