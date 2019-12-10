@@ -11,3 +11,4 @@ pytest
 pytest-cov
 pytest-randomly
 twine
+secretstorage # required for twine on linux
