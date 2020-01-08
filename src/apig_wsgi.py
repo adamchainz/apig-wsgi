@@ -1,7 +1,7 @@
 import sys
 from base64 import b64decode, b64encode
 from io import BytesIO
-from urllib.parse import urlencode
+from urllib.parse import urlencode, unquote
 
 __all__ = ("make_lambda_handler",)
 
@@ -55,7 +55,7 @@ def get_environ(event, binary_support):
     else:
         body = body.encode("utf-8")
     params = event.get("queryStringParameters") or {}
-
+    params = {k: unquote(v) for k, v in params.items()}  # decode first to prevent double encoding
     environ = {
         "CONTENT_LENGTH": str(len(body)),
         "HTTP": "on",
