@@ -1,7 +1,7 @@
 import sys
 from base64 import b64decode, b64encode
 from io import BytesIO
-from urllib.parse import urlencode, unquote
+from urllib.parse import unquote, urlencode
 
 __all__ = ("make_lambda_handler",)
 
