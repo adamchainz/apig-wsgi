@@ -54,7 +54,7 @@ def get_environ(event, binary_support):
     else:
         body = body.encode("utf-8")
     params = event.get("queryStringParameters") or {}
-    params = "&".join(f"{key}={val}" for (key, val) in params.items())
+    params = "&".join("{}={}".format(key, val) for (key, val) in params.items())
     environ = {
         "CONTENT_LENGTH": str(len(body)),
         "HTTP": "on",
