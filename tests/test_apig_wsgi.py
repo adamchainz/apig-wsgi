@@ -241,14 +241,6 @@ def test_querystring_one(simple_app):
     assert simple_app.environ["QUERY_STRING"] == "foo=bar"
 
 
-def test_querystring_decode_first(simple_app):
-    event = make_event(qs_params={"foo": "2018-06-13%3A07%3A44"})
-
-    simple_app.handler(event, None)
-
-    assert simple_app.environ["QUERY_STRING"] == "foo=2018-06-13%3A07%3A44"
-
-
 def test_plain_header(simple_app):
     event = make_event(headers={"Test-Header": "foobar"})
 
