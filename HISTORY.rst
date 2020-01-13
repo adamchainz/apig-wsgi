@@ -1,6 +1,13 @@
 History
 =======
 
+Pending
+-------
+
+* Fix URL parameter encoding - URL escaping like `%3A` will now be passed
+  correctly to your application
+  (`Issue #101 <https://github.com/adamchainz/apig-wsgi/issues/101>`__).
+
 2.4.0 (2019-11-15)
 ------------------
 
