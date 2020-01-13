@@ -241,6 +241,22 @@ def test_querystring_one(simple_app):
     assert simple_app.environ["QUERY_STRING"] == "foo=bar"
 
 
+def test_querystring_encoding_value(simple_app):
+    event = make_event(qs_params={"foo": "a%20bar"})
+
+    simple_app.handler(event, None)
+
+    assert simple_app.environ["QUERY_STRING"] == "foo=a%20bar"
+
+
+def test_querystring_encoding_key(simple_app):
+    event = make_event(qs_params={"a%20foo": "bar"})
+
+    simple_app.handler(event, None)
+
+    assert simple_app.environ["QUERY_STRING"] == "a%20foo=bar"
+
+
 def test_plain_header(simple_app):
     event = make_event(headers={"Test-Header": "foobar"})
 
