@@ -1,2 +1,2 @@
 [tool.black]
-target-version = ['py36']
+target-version = ['py35']

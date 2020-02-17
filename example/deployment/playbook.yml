@@ -39,9 +39,9 @@
       chdir: '{{ abs_build_path.stdout }}'
 
   - name: install development version of apig-wsgi
-    command: pip3 install {{ abs_build_path.stdout|dirname|dirname|dirname }}
-    args:
-      chdir: '{{ abs_build_path.stdout }}'
+    copy:
+      src: '{{ abs_build_path.stdout|dirname|dirname|dirname }}/src/apig_wsgi.py'
+      dest: '{{ abs_build_path.stdout }}/apig_wsgi.py'
 
   - name: remove .pyc files from build directory
     command: find . -type f -name "*.py[co]" -delete

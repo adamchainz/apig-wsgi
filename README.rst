@@ -62,6 +62,13 @@ If the event from API Gateway contains the ``requestContext`` key, for example
 from custom request authorizers, this will be available in the WSGI environ
 at the key ``apig_wsgi.request_context``.
 
+If you want to inspect the full event from API Gateway, it's available in the
+WSGI environ at the key ``apig_wsgi.full_event``.
+
+Multiple values for headers and qurey parameters are supported. They are
+enabled automatically on API Gateway but need
+`explict activation on ALB's <https://docs.aws.amazon.com/elasticloadbalancing/latest/application/lambda-functions.html#multi-value-headers>`__.
+
 Example
 =======
 

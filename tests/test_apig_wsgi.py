@@ -37,20 +37,36 @@ parametrize_custom_text_content_type = pytest.mark.parametrize(
 def make_event(
     method="GET",
     qs_params=None,
+    qs_params_multi=True,
     headers=None,
+    headers_multi=True,
     body="",
     binary=False,
     request_context=None,
 ):
     if headers is None:
-        headers = {"Host": "example.com"}
+        headers = {"Host": ["example.com"]}
 
     event = {
         "httpMethod": method,
         "path": "/",
-        "queryStringParameters": qs_params,
-        "headers": headers,
+        "multiValueHeaders": headers,
     }
+
+    if qs_params_multi:
+        event["multiValueQueryStringParameters"] = qs_params
+    else:
+        if qs_params is None:
+            event["queryStringParameters"] = None
+        else:
+            event["queryStringParameters"] = {
+                key: values[-1] for key, values in qs_params.items()
+            }
+
+    if headers_multi:
+        event["multiValueHeaders"] = headers
+    else:
+        event["headers"] = {key: values[-1] for key, values in headers.items()}
 
     if binary:
         event["body"] = b64encode(body.encode("utf-8"))
@@ -225,6 +241,14 @@ def test_querystring_none(simple_app):
     assert simple_app.environ["QUERY_STRING"] == ""
 
 
+def test_querystring_none_single(simple_app):
+    event = make_event(qs_params_multi=False)
+
+    simple_app.handler(event, None)
+
+    assert simple_app.environ["QUERY_STRING"] == ""
+
+
 def test_querystring_empty(simple_app):
     event = make_event(qs_params={})
 
@@ -233,8 +257,24 @@ def test_querystring_empty(simple_app):
     assert simple_app.environ["QUERY_STRING"] == ""
 
 
+def test_querystring_empty_single(simple_app):
+    event = make_event(qs_params={}, qs_params_multi=False)
+
+    simple_app.handler(event, None)
+
+    assert simple_app.environ["QUERY_STRING"] == ""
+
+
 def test_querystring_one(simple_app):
-    event = make_event(qs_params={"foo": "bar"})
+    event = make_event(qs_params={"foo": ["bar"]})
+
+    simple_app.handler(event, None)
+
+    assert simple_app.environ["QUERY_STRING"] == "foo=bar"
+
+
+def test_querystring_one_single(simple_app):
+    event = make_event(qs_params={"foo": ["bar"]}, qs_params_multi=False)
 
     simple_app.handler(event, None)
 
@@ -242,7 +282,7 @@ def test_querystring_one(simple_app):
 
 
 def test_querystring_encoding_value(simple_app):
-    event = make_event(qs_params={"foo": "a%20bar"})
+    event = make_event(qs_params={"foo": ["a%20bar"]})
 
     simple_app.handler(event, None)
 
@@ -250,29 +290,53 @@ def test_querystring_encoding_value(simple_app):
 
 
 def test_querystring_encoding_key(simple_app):
-    event = make_event(qs_params={"a%20foo": "bar"})
+    event = make_event(qs_params={"a%20foo": ["bar"]})
 
     simple_app.handler(event, None)
 
     assert simple_app.environ["QUERY_STRING"] == "a%20foo=bar"
 
 
+def test_querystring_multi(simple_app):
+    event = make_event(qs_params={"foo": ["bar", "baz"]})
+
+    simple_app.handler(event, None)
+
+    assert simple_app.environ["QUERY_STRING"] == "foo=bar&foo=baz"
+
+
 def test_plain_header(simple_app):
-    event = make_event(headers={"Test-Header": "foobar"})
+    event = make_event(headers={"Test-Header": ["foobar"]})
 
     simple_app.handler(event, None)
 
     assert simple_app.environ["HTTP_TEST_HEADER"] == "foobar"
 
 
+def test_plain_header_single(simple_app):
+    event = make_event(headers={"Test-Header": ["foobar"]}, headers_multi=False)
+
+    simple_app.handler(event, None)
+
+    assert simple_app.environ["HTTP_TEST_HEADER"] == "foobar"
+
+
+def test_plain_header_multi(simple_app):
+    event = make_event(headers={"Test-Header": ["foo", "bar"]})
+
+    simple_app.handler(event, None)
+
+    assert simple_app.environ["HTTP_TEST_HEADER"] == "foo,bar"
+
+
 def test_special_headers(simple_app):
     event = make_event(
         headers={
-            "Content-Type": "text/plain",
-            "Host": "example.com",
-            "X-Forwarded-For": "1.2.3.4, 5.6.7.8",
-            "X-Forwarded-Proto": "https",
-            "X-Forwarded-Port": "123",
+            "Content-Type": ["text/plain"],
+            "Host": ["example.com"],
+            "X-Forwarded-For": ["1.2.3.4, 5.6.7.8"],
+            "X-Forwarded-Proto": ["https"],
+            "X-Forwarded-Port": ["123"],
         }
     )
 
@@ -288,7 +352,7 @@ def test_special_headers(simple_app):
 def test_no_headers(simple_app):
     # allow headers to be missing from event
     event = make_event()
-    del event["headers"]
+    del event["multiValueHeaders"]
 
     simple_app.handler(event, None)
 
@@ -296,7 +360,7 @@ def test_no_headers(simple_app):
 def test_headers_None(simple_app):
     # allow headers to be 'None' from APIG test console
     event = make_event()
-    event["headers"] = None
+    event["multiValueHeaders"] = None
 
     simple_app.handler(event, None)
 
@@ -320,3 +384,11 @@ def test_request_context(simple_app):
     simple_app.handler(event, None)
 
     assert simple_app.environ["apig_wsgi.request_context"] == context
+
+
+def test_full_event(simple_app):
+    event = make_event()
+
+    simple_app.handler(event, None)
+
+    assert simple_app.environ["apig_wsgi.full_event"] == event
