@@ -1,8 +1,8 @@
 History
 =======
 
-Pending
--------
+2.5.0 (2020-02-17)
+------------------
 
 * Support multi-value headers and query parameters as API Gateway added
   (`Issue #103 <https://github.com/adamchainz/apig-wsgi/issues/103>`__).
