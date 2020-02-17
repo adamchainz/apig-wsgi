@@ -1,0 +1,99 @@
+- name: deploy site
+  hosts: localhost
+  connection: local
+  vars:
+    aws_region: eu-central-1
+    code_path: ../app/
+    zip_name: testapp.zip
+  tasks:
+
+  # 1. Create a Lambda package zip file including all dependencies
+
+  - name: copy application code into build directory
+    synchronize:
+      src: '{{ code_path }}'
+      dest: build/
+      delete: true
+      rsync_opts:
+      - "--exclude=/.gitkeep"
+      - "--exclude=/venv"
+
+  - name: add setup.cfg to build directory to allow pip to install directly into it
+    # https://docs.aws.amazon.com/lambda/latest/dg/lambda-python-how-to-create-deployment-package.html
+    copy:
+      dest: build/setup.cfg
+      content: |
+        [install]
+        prefix=
+
+  - name: get build directory absolute path
+    changed_when: false
+    command: pwd
+    args:
+      chdir: build
+    register: abs_build_path
+
+  - name: install dependencies into build directory
+    command: pip3 install -r requirements.txt --target .
+    args:
+      chdir: '{{ abs_build_path.stdout }}'
+
+  - name: install development version of apig-wsgi
+    command: pip3 install {{ abs_build_path.stdout|dirname|dirname|dirname }}
+    args:
+      chdir: '{{ abs_build_path.stdout }}'
+
+  - name: remove .pyc files from build directory
+    command: find . -type f -name "*.py[co]" -delete
+    args:
+      chdir: '{{ abs_build_path.stdout }}'
+
+  - name: remove any old zip
+    file:
+      path: dist/{{ zip_name }}
+      state: absent
+
+  - name: create zip package
+    command: zip -r ../dist/{{ zip_name }} .
+    args:
+      chdir: build/
+
+  # 2. Create base resources
+
+  - name: create or update base stack
+    # https://docs.ansible.com/ansible/latest/modules/cloudformation_module.html
+    cloudformation:
+      region: '{{ aws_region }}'
+      stack_name: 'apig-wsgi-testapp-base'
+      template: files/cloudformation_base.yml
+    register: base_stack_result
+
+  # 3. Upload Lambda package into S3 bucket
+
+  - name: copy package to s3
+    # Not using Ansible module to do this because it doesn't provide a way to
+    # do this that returns the VersionId
+    command: >
+      aws s3api put-object
+      --bucket {{ base_stack_result.stack_outputs.PackageS3Bucket }}
+      --key {{ zip_name }}
+      --body dist/{{ zip_name }}
+    register: s3_result
+
+  # 4. Create site resources
+
+  - name: create or update site stack
+    cloudformation:
+      region: '{{ aws_region }}'
+      stack_name: 'apig-wsgi-testapp-site'
+      template: files/cloudformation_site.yml
+      template_parameters:
+        PackageS3Bucket: '{{ base_stack_result.stack_outputs.PackageS3Bucket }}'
+        PackageS3Key: '{{ zip_name }}'
+        PackageS3ObjectVersion: '{{ (s3_result.stdout|from_json).VersionId }}'
+        LambdaIAMRoleArn: '{{ base_stack_result.stack_outputs.LambdaIAMRoleArn }}'
+    register: site_stack_result
+
+  - name: debug
+    debug:
+      msg: Your site is now running at {{ site_stack_result.stack_outputs.StageUrl }} !

@@ -1,0 +1,65 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Base resources for apig-wsgi test app
+
+Resources:
+
+  # IAM Role that the API runs with
+
+  LambdaIAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: lambda.amazonaws.com
+          Action: sts:AssumeRole
+
+  LambdaIAMRoleAllowLogging:
+    Type: AWS::IAM::Policy
+    Properties:
+      Roles:
+      - !Ref LambdaIAMRole
+      PolicyName: AllowLogging
+      PolicyDocument:
+        Version: 2012-10-17
+        Statement:
+        - Effect: Allow
+          Action:
+          - logs:CreateLogGroup
+          - logs:CreateLogStream
+          - logs:PutLogEvents
+          Resource:
+          - !Sub arn:aws:logs:*:${AWS::AccountId}:log-group:/aws/lambda/*
+          - !Sub arn:aws:logs:*:${AWS::AccountId}:log-group:/aws/lambda/*:*
+
+  # S3 Bucket to upload the Lambda package into
+
+  PackageS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+        - ServerSideEncryptionByDefault:
+            SSEAlgorithm: aws:kms
+      LifecycleConfiguration:
+        Rules:
+        - Id: Old versions disappear
+          NoncurrentVersionExpirationInDays: 7
+          Status: Enabled
+        - Id: ExpireMultipartUploads
+          Status: Enabled
+          AbortIncompleteMultipartUpload:
+            DaysAfterInitiation: 1
+
+Outputs:
+
+  LambdaIAMRoleArn:
+    Value: !GetAtt LambdaIAMRole.Arn
+
+  PackageS3Bucket:
+    Value: !Ref PackageS3Bucket
