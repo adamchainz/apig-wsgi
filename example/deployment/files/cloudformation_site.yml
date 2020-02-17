@@ -1,0 +1,97 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Description: Site resources for agig-wsgi test app
+
+Parameters:
+
+  PackageS3Bucket:
+    Type: String
+
+  PackageS3Key:
+    Type: String
+
+  PackageS3ObjectVersion:
+    Type: String
+
+  LambdaIAMRoleArn:
+    Type: String
+
+Resources:
+
+  # Lambda
+
+  LambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Ref PackageS3Bucket
+        S3Key: !Ref PackageS3Key
+        S3ObjectVersion: !Ref PackageS3ObjectVersion
+      Handler: testapp.wsgi.lambda_handler
+      MemorySize: 128
+      Role: !Ref LambdaIAMRoleArn
+      Runtime: python3.7
+      Timeout: 20
+
+  LambdaPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt LambdaFunction.Arn
+      Principal: apigateway.amazonaws.com
+
+  # API Gateway
+
+  RestApi:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: apig-wsgi-testapp
+
+  RestApiRootANY:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApi
+      ResourceId: !GetAtt RestApi.RootResourceId
+      HttpMethod: ANY
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations
+
+  RestApiProxy:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref RestApi
+      ParentId: !GetAtt RestApi.RootResourceId
+      PathPart: '{proxy+}'
+
+  RestApiProxyANY:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      RestApiId: !Ref RestApi
+      ResourceId: !Ref RestApiProxy
+      HttpMethod: ANY
+      AuthorizationType: NONE
+      Integration:
+        Type: AWS_PROXY
+        IntegrationHttpMethod: POST
+        Uri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations
+
+  Deployment:
+    DependsOn: RestApiProxyANY
+    Type: AWS::ApiGateway::Deployment
+    Properties:
+      RestApiId: !Ref RestApi
+
+  StageApi:
+    Type: AWS::ApiGateway::Stage
+    Properties:
+      RestApiId: !Ref RestApi
+      DeploymentId: !Ref Deployment
+      StageName: prod
+
+Outputs:
+
+  StageUrl:
+    Value: !Sub https://${RestApi}.execute-api.eu-central-1.amazonaws.com/${StageApi}

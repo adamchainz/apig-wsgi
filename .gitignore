@@ -42,3 +42,9 @@ htmlcov
 # Complexity
 output/*.html
 output/*/index.html
+
+pip-wheel-metadata/
+example/app/venv
+example/deployment/venv
+example/deployment/build
+example/deployment/dist

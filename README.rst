@@ -61,3 +61,9 @@ to a list of content type prefixes of your choice.
 If the event from API Gateway contains the ``requestContext`` key, for example
 from custom request authorizers, this will be available in the WSGI environ
 at the key ``apig_wsgi.request_context``.
+
+Example
+=======
+
+An example application with Ansible deployment is provided in the ``example/``
+directory in the repository. See the ``README.rst`` there for guidance.
