@@ -1,6 +1,14 @@
 History
 =======
 
+Pending
+-------
+
+* Support multi-value headers and query parameters as API Gateway added
+  (`Issue #103 <https://github.com/adamchainz/apig-wsgi/issues/103>`__).
+* Pass full event as a WSGI environ variable
+  (`PR #111 <https://github.com/adamchainz/apig-wsgi/issues/111>`__).
+
 2.4.1 (2020-01-13)
 ------------------
 

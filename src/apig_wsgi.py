@@ -53,13 +53,11 @@ def get_environ(event, binary_support):
         body = b64decode(body)
     else:
         body = body.encode("utf-8")
-    params = event.get("queryStringParameters") or {}
-    params = "&".join("{}={}".format(key, val) for (key, val) in params.items())
+
     environ = {
         "CONTENT_LENGTH": str(len(body)),
         "HTTP": "on",
         "PATH_INFO": event["path"],
-        "QUERY_STRING": params,
         "REMOTE_ADDR": "127.0.0.1",
         "REQUEST_METHOD": method,
         "SCRIPT_NAME": "",
@@ -72,26 +70,50 @@ def get_environ(event, binary_support):
         "wsgi.version": (1, 0),
     }
 
-    headers = event.get("headers") or {}  # may be None when testing on console
-    for key, value in headers.items():
+    # Multi-value query strings need explicit activation on ALB
+    if "multiValueQueryStringParameters" in event:
+        # may be None when testing on console
+        multi_params = event["multiValueQueryStringParameters"] or {}
+    else:
+        single_params = event.get("queryStringParameters") or {}
+        multi_params = {key: [value] for key, value in single_params.items()}
+    environ["QUERY_STRING"] = "&".join(
+        "{}={}".format(key, val) for (key, vals) in multi_params.items() for val in vals
+    )
+
+    # Multi-value headers need explicit activation on ALB
+    if "multiValueHeaders" in event:
+        # may be None when testing on console
+        headers = event["multiValueHeaders"] or {}
+    else:
+        # may be None when testing on console
+        single_headers = event.get("headers") or {}
+        headers = {key: [value] for key, value in single_headers.items()}
+    for key, values in headers.items():
         key = key.upper().replace("-", "_")
 
         if key == "CONTENT_TYPE":
-            environ["CONTENT_TYPE"] = value
+            environ["CONTENT_TYPE"] = values[-1]
+            continue
         elif key == "HOST":
-            environ["SERVER_NAME"] = value
+            environ["SERVER_NAME"] = values[-1]
+            continue
         elif key == "X_FORWARDED_FOR":
-            environ["REMOTE_ADDR"] = value.split(", ")[0]
+            environ["REMOTE_ADDR"] = values[-1].split(", ")[0]
         elif key == "X_FORWARDED_PROTO":
-            environ["wsgi.url_scheme"] = value
+            environ["wsgi.url_scheme"] = values[-1]
         elif key == "X_FORWARDED_PORT":
-            environ["SERVER_PORT"] = value
+            environ["SERVER_PORT"] = values[-1]
 
-        environ["HTTP_" + key] = value
+        # Multi-value headers accumulate with ","
+        environ["HTTP_" + key] = ",".join(values)
 
     # Pass the AWS requestContext to the application
     if "requestContext" in event:
         environ["apig_wsgi.request_context"] = event["requestContext"]
+
+    # Pass the full event to the application as an escape hatch
+    environ["apig_wsgi.full_event"] = event
 
     return environ
 
