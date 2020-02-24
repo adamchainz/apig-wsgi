@@ -22,7 +22,7 @@ We use vanilla venv, pip, and Django to run:
    cd app
    python -m venv venv
    source venv/bin/activate
-   pip install -r requirements.txt
+   python -m pip install -r requirements.txt
    python manage.py runserver
 
 Open it at http://127.0.0.1:8000/
@@ -43,7 +43,7 @@ other requirements into it, and run the deployment playbook:
    cd deployment
    python -m venv venv
    source venv/bin/activate
-   pip install -r requirements.txt
+   python -m pip install -r requirements.txt
    ansible-playbook playbook.yml
 
 Ansible should complete with a ``PLAY RECAP`` at the end like:

@@ -32,7 +32,7 @@ Use **pip**:
 
 .. code-block:: sh
 
-    pip install apig-wsgi
+    python -m pip install apig-wsgi
 
 Python 3.5 to 3.8 supported.
 
