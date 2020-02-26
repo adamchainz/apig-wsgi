@@ -1,6 +1,13 @@
 History
 =======
 
+2.5.1 (2020-02-26)
+------------------
+
+* Restore setting ``HTTP_CONTENT_TYPE`` and ``HTTP_HOST`` in the environ,
+  accidentally broken in 2.5.0 with multi-value header feature
+  (`Issue #117 <https://github.com/adamchainz/apig-wsgi/issues/117>`__).
+
 2.5.0 (2020-02-17)
 ------------------
 
