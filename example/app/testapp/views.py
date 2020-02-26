@@ -9,6 +9,7 @@ def index(request):
     params = pformat(dict(request.GET))
     request_context = pformat(request.environ.get("apig_wsgi.request_context", None))
     full_event = pformat(request.environ.get("apig_wsgi.full_event", None))
+    environ = pformat(request.environ)
     return HttpResponse(
         f"""
         <h1>Hello World!</h1>
@@ -20,5 +21,7 @@ def index(request):
         <pre>{escape(request_context)}</pre>
         <h2>Full event</h2>
         <pre>{escape(full_event)}</pre>
+        <h2>WSGI Environ</h2>
+        <pre>{escape(environ)}</pre>
         """
     )
