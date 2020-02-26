@@ -94,10 +94,8 @@ def get_environ(event, binary_support):
 
         if key == "CONTENT_TYPE":
             environ["CONTENT_TYPE"] = values[-1]
-            continue
         elif key == "HOST":
             environ["SERVER_NAME"] = values[-1]
-            continue
         elif key == "X_FORWARDED_FOR":
             environ["REMOTE_ADDR"] = values[-1].split(", ")[0]
         elif key == "X_FORWARDED_PROTO":

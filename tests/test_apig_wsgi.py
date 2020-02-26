@@ -343,10 +343,60 @@ def test_special_headers(simple_app):
     simple_app.handler(event, None)
 
     assert simple_app.environ["CONTENT_TYPE"] == "text/plain"
+    assert simple_app.environ["HTTP_CONTENT_TYPE"] == "text/plain"
     assert simple_app.environ["SERVER_NAME"] == "example.com"
+    assert simple_app.environ["HTTP_HOST"] == "example.com"
     assert simple_app.environ["REMOTE_ADDR"] == "1.2.3.4"
+    assert simple_app.environ["HTTP_X_FORWARDED_FOR"] == "1.2.3.4, 5.6.7.8"
     assert simple_app.environ["wsgi.url_scheme"] == "https"
+    assert simple_app.environ["HTTP_X_FORWARDED_PROTO"] == "https"
     assert simple_app.environ["SERVER_PORT"] == "123"
+    assert simple_app.environ["HTTP_X_FORWARDED_PORT"] == "123"
+
+
+def test_special_content_type(simple_app):
+    event = make_event(headers={"Content-Type": ["text/plain"]})
+
+    simple_app.handler(event, None)
+
+    assert simple_app.environ["CONTENT_TYPE"] == "text/plain"
+    assert simple_app.environ["HTTP_CONTENT_TYPE"] == "text/plain"
+
+
+def test_special_host(simple_app):
+    event = make_event(headers={"Host": ["example.com"]})
+
+    simple_app.handler(event, None)
+
+    assert simple_app.environ["SERVER_NAME"] == "example.com"
+    assert simple_app.environ["HTTP_HOST"] == "example.com"
+
+
+def test_special_x_forwarded_for(simple_app):
+    event = make_event(headers={"X-Forwarded-For": ["1.2.3.4, 5.6.7.8"]})
+
+    simple_app.handler(event, None)
+
+    assert simple_app.environ["REMOTE_ADDR"] == "1.2.3.4"
+    assert simple_app.environ["HTTP_X_FORWARDED_FOR"] == "1.2.3.4, 5.6.7.8"
+
+
+def test_x_forwarded_proto(simple_app):
+    event = make_event(headers={"X-Forwarded-Proto": ["https"]})
+
+    simple_app.handler(event, None)
+
+    assert simple_app.environ["wsgi.url_scheme"] == "https"
+    assert simple_app.environ["HTTP_X_FORWARDED_PROTO"] == "https"
+
+
+def test_x_forwarded_port(simple_app):
+    event = make_event(headers={"X-Forwarded-Port": ["123"]})
+
+    simple_app.handler(event, None)
+
+    assert simple_app.environ["SERVER_PORT"] == "123"
+    assert simple_app.environ["HTTP_X_FORWARDED_PORT"] == "123"
 
 
 def test_no_headers(simple_app):
