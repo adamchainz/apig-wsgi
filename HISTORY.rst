@@ -1,6 +1,12 @@
 History
 =======
 
+Pending
+-------
+
+* Provide an escape hatch for retrieving AWS Lambda Context object
+  (`PR #122 <https://github.com/adamchainz/apig-wsgi/pull/122>`__).
+
 2.5.1 (2020-02-26)
 ------------------
 
