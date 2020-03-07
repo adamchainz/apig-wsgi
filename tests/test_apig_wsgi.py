@@ -472,7 +472,7 @@ def test_full_event(simple_app):
 
 
 def test_context(simple_app):
-    context = Context(aws_request_id="test-request-id"
+    context = Context(aws_request_id="test-request-id")
 
     simple_app.handler(make_event(), context)
 
