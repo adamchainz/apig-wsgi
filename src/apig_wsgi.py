@@ -34,7 +34,7 @@ def make_lambda_handler(
     non_binary_content_type_prefixes = tuple(non_binary_content_type_prefixes)
 
     def handler(event, context):
-        environ = get_environ(event, binary_support=binary_support)
+        environ = get_environ(event, context, binary_support=binary_support)
         response = Response(
             binary_support=binary_support,
             non_binary_content_type_prefixes=non_binary_content_type_prefixes,
@@ -46,7 +46,7 @@ def make_lambda_handler(
     return handler
 
 
-def get_environ(event, binary_support):
+def get_environ(event, context, binary_support):
     method = event["httpMethod"]
     body = event.get("body", "") or ""
     if event.get("isBase64Encoded", False):
@@ -112,6 +112,7 @@ def get_environ(event, binary_support):
 
     # Pass the full event to the application as an escape hatch
     environ["apig_wsgi.full_event"] = event
+    environ["apig_wsgi.context"] = context
 
     return environ
 
