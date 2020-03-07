@@ -80,6 +80,34 @@ def make_event(
     return event
 
 
+class ContextStub:
+    def __init__(
+        self,
+        function_name="app",
+        function_version="$LATEST",
+        invoked_function_arn="arn:test:lambda:us-east-1:0123456789:function:app",
+        memory_limit_in_mb=128,
+        aws_request_id=None,
+        log_stream_name="app-group",
+        log_group_name="app-stream",
+        identity=None,
+        client_context=None,
+        remaining_time_in_millis=60,
+    ):
+        self.function_name = function_name
+        self.function_version = function_version
+        self.invoked_function_arn = invoked_function_arn
+        self.memory_limit_in_mb = memory_limit_in_mb
+        self.aws_request_id = aws_request_id
+        self.log_group_name = log_group_name
+        self.log_stream_name = log_stream_name
+        if identity:
+            self.identity = identity
+        if client_context:
+            self.client_context = client_context
+        self._remaining_time_in_millis = remaining_time_in_millis
+
+
 def test_get(simple_app):
     response = simple_app.handler(make_event(), None)
 
@@ -442,3 +470,11 @@ def test_full_event(simple_app):
     simple_app.handler(event, None)
 
     assert simple_app.environ["apig_wsgi.full_event"] == event
+
+
+def test_context(simple_app):
+    context = ContextStub(aws_request_id="test-request-id")
+
+    simple_app.handler(make_event(), context)
+
+    assert simple_app.environ["apig_wsgi.context"] == context
