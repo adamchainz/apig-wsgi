@@ -55,7 +55,7 @@ using ``'*/*'`` is the best way to do it, since it is used to match the request
 Note that binary responses aren't sent if your response has a 'Content-Type'
 starting 'text/', 'application/json' or 'application/vnd.api+json' - this
 is to support sending larger text responses. To support other content types
-than the ones specified above, you can set `non_binary_content_type_prefixes`
+than the ones specified above, you can set ``non_binary_content_type_prefixes``
 to a list of content type prefixes of your choice.
 
 If the event from API Gateway contains the ``requestContext`` key, for example
