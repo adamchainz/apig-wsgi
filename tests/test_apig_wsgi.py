@@ -82,6 +82,7 @@ def make_event(
 
 class ContextStub:
     def __init__(
+        self,
         function_name="app",
         function_version="$LATEST",
         invoked_function_arn="arn:test:lambda:us-east-1:0123456789:function:app",
