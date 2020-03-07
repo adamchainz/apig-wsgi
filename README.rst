@@ -65,7 +65,11 @@ at the key ``apig_wsgi.request_context``.
 If you want to inspect the full event from API Gateway, it's available in the
 WSGI environ at the key ``apig_wsgi.full_event``.
 
-Multiple values for headers and qurey parameters are supported. They are
+If you need the
+`Lambda Context object <https://docs.aws.amazon.com/lambda/latest/dg/python-context.html>`__,
+it's available in the WSGI environ at the key ``apig_wsgi.context``.
+
+Multiple values for headers and query parameters are supported. They are
 enabled automatically on API Gateway but need
 `explict activation on ALB's <https://docs.aws.amazon.com/elasticloadbalancing/latest/application/lambda-functions.html#multi-value-headers>`__.
 

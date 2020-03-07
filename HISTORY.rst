@@ -1,10 +1,10 @@
 History
 =======
 
-Pending
--------
+2.6.0 (2020-03-07)
+------------------
 
-* Provide an escape hatch for retrieving AWS Lambda Context object
+* Pass Lambda Context object as a WSGI environ variable
   (`PR #122 <https://github.com/adamchainz/apig-wsgi/pull/122>`__).
 
 2.5.1 (2020-02-26)
