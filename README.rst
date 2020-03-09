@@ -48,9 +48,11 @@ Usage
 If you want to support sending binary responses, set ``binary_support`` to
 ``True``. ALB's support binary responses by default, but on API Gateway you
 need to make sure you have ``'*/*'`` in the 'binary media types' configuration
-on your Rest API (whilst API Gateway supports a list of binary media types,
-using ``'*/*'`` is the best way to do it, since it is used to match the request
-'Accept' header as well, which WSGI applications are likely to ignore).
+on your Rest API. You will need to configure this through API Gateway directly,
+CloudFormation, SAM, or whatever tool your project is using. Whilst API Gateway
+supports a list of binary media types, using ``'*/*'`` is the best way to
+configure this, since it is used to match the request 'Accept' header as well,
+which WSGI applications are likely to ignore.
 
 Note that binary responses aren't sent if your response has a 'Content-Type'
 starting 'text/', 'application/json' or 'application/vnd.api+json' - this
