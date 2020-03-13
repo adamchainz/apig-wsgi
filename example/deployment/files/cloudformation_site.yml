@@ -40,7 +40,17 @@ Resources:
       FunctionName: !GetAtt LambdaFunction.Arn
       Principal: apigateway.amazonaws.com
 
-  # API Gateway
+  # new style HTTP API
+
+  HttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: agi-wsgi-testapp-httpapi
+      Description: HTTP API
+      ProtocolType: HTTP
+      Target: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations
+
+  # old style REST API
 
   RestApi:
     Type: AWS::ApiGateway::RestApi
@@ -93,5 +103,8 @@ Resources:
 
 Outputs:
 
-  StageUrl:
+  HttpApiUrl:
+    Value: !Sub https://${HttpApi}.execute-api.eu-central-1.amazonaws.com/
+
+  RestApiUrl:
     Value: !Sub https://${RestApi}.execute-api.eu-central-1.amazonaws.com/${StageApi}

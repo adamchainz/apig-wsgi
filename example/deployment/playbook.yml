@@ -1,3 +1,4 @@
+#!/usr/bin/env ansible-playbook
 - name: deploy site
   hosts: localhost
   connection: local
@@ -96,4 +97,6 @@
 
   - name: debug
     debug:
-      msg: Your site is now running at {{ site_stack_result.stack_outputs.StageUrl }} !
+      msg: |
+        New style "HTTP API" at {{ site_stack_result.stack_outputs.HttpApiUrl }}
+        Old style REST API at {{ site_stack_result.stack_outputs.RestApiUrl }}
