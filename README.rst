@@ -2,8 +2,8 @@
 apig-wsgi
 =========
 
-.. image:: https://img.shields.io/travis/adamchainz/apig-wsgi/master.svg
-        :target: https://travis-ci.org/adamchainz/apig-wsgi
+.. image:: https://github.com/adamchainz/apig-wsgi/workflows/CI/badge.svg?branch=master
+        :target: https://github.com/adamchainz/apig-wsgi/actions?workflow=CI
 
 .. image:: https://img.shields.io/pypi/v/apig-wsgi.svg
         :target: https://pypi.python.org/pypi/apig-wsgi
