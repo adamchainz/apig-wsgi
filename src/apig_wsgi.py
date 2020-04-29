@@ -13,7 +13,7 @@ DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES = (
 
 def make_lambda_handler(
     wsgi_app, binary_support=False, non_binary_content_type_prefixes=None,
-    wsgi_errors=sys.stdout
+    wsgi_errors=sys.stderr
 ):
     """
     Turn a WSGI app callable into a Lambda handler function suitable for
