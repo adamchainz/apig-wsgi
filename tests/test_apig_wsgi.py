@@ -479,6 +479,7 @@ def test_context(simple_app):
 
     assert simple_app.environ["apig_wsgi.context"] == context
 
+
 def test_default_wsgi_errors(simple_app):
     simple_app.handler = make_lambda_handler(simple_app)
 
@@ -486,17 +487,17 @@ def test_default_wsgi_errors(simple_app):
 
     assert simple_app.environ["wsgi.errors"] == sys.stderr
 
+
 def test_override_wsgi_errors(simple_app):
-    class customLogger():
-        def write(self,data):
+    class customLogger:
+        def write(self, data):
             pass
 
         def flush(self):
             pass
 
-    errorsTo=customLogger()
+    errorsTo = customLogger()
     simple_app.handler = make_lambda_handler(simple_app, wsgi_errors=errorsTo)
     response = simple_app.handler(make_event(), None)
 
     assert simple_app.environ["wsgi.errors"] == errorsTo
-

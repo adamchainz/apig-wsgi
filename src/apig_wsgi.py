@@ -12,8 +12,10 @@ DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES = (
 
 
 def make_lambda_handler(
-    wsgi_app, binary_support=False, non_binary_content_type_prefixes=None,
-    wsgi_errors=sys.stderr
+    wsgi_app,
+    binary_support=False,
+    non_binary_content_type_prefixes=None,
+    wsgi_errors=sys.stderr,
 ):
     """
     Turn a WSGI app callable into a Lambda handler function suitable for
@@ -35,7 +37,9 @@ def make_lambda_handler(
     non_binary_content_type_prefixes = tuple(non_binary_content_type_prefixes)
 
     def handler(event, context):
-        environ = get_environ(event, context, binary_support=binary_support, wsgi_errors=wsgi_errors)
+        environ = get_environ(
+            event, context, binary_support=binary_support, wsgi_errors=wsgi_errors
+        )
         response = Response(
             binary_support=binary_support,
             non_binary_content_type_prefixes=non_binary_content_type_prefixes,
