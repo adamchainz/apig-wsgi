@@ -12,7 +12,8 @@ DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES = (
 
 
 def make_lambda_handler(
-    wsgi_app, binary_support=False, non_binary_content_type_prefixes=None
+    wsgi_app, binary_support=False, non_binary_content_type_prefixes=None,
+    wsgi_errors=sys.stdout
 ):
     """
     Turn a WSGI app callable into a Lambda handler function suitable for
@@ -34,7 +35,7 @@ def make_lambda_handler(
     non_binary_content_type_prefixes = tuple(non_binary_content_type_prefixes)
 
     def handler(event, context):
-        environ = get_environ(event, context, binary_support=binary_support)
+        environ = get_environ(event, context, binary_support=binary_support, wsgi_errors=wsgi_errors)
         response = Response(
             binary_support=binary_support,
             non_binary_content_type_prefixes=non_binary_content_type_prefixes,
@@ -46,7 +47,7 @@ def make_lambda_handler(
     return handler
 
 
-def get_environ(event, context, binary_support):
+def get_environ(event, context, binary_support, wsgi_errors):
     method = event["httpMethod"]
     body = event.get("body", "") or ""
     if event.get("isBase64Encoded", False):
@@ -62,7 +63,7 @@ def get_environ(event, context, binary_support):
         "REQUEST_METHOD": method,
         "SCRIPT_NAME": "",
         "SERVER_PROTOCOL": "HTTP/1.1",
-        "wsgi.errors": sys.stderr,
+        "wsgi.errors": wsgi_errors,
         "wsgi.input": BytesIO(body),
         "wsgi.multiprocess": False,
         "wsgi.multithread": False,
