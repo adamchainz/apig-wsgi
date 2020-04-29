@@ -483,7 +483,7 @@ def test_context(simple_app):
 def test_default_wsgi_errors(simple_app):
     simple_app.handler = make_lambda_handler(simple_app)
 
-    response = simple_app.handler(make_event(), None)
+    simple_app.handler(make_event(), None)
 
     assert simple_app.environ["wsgi.errors"] == sys.stderr
 
@@ -498,6 +498,6 @@ def test_override_wsgi_errors(simple_app):
 
     errorsTo = customLogger()
     simple_app.handler = make_lambda_handler(simple_app, wsgi_errors=errorsTo)
-    response = simple_app.handler(make_event(), None)
+    simple_app.handler(make_event(), None)
 
     assert simple_app.environ["wsgi.errors"] == errorsTo
