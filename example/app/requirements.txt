@@ -4,8 +4,8 @@
 #
 #    pip-compile
 #
-apig-wsgi==2.4.1
+apig-wsgi==2.4.1          # via -r requirements.in
 asgiref==3.2.3            # via django
-django==3.0.3
+django==3.0.7             # via -r requirements.in
 pytz==2019.3              # via django
 sqlparse==0.3.0           # via django
