@@ -50,6 +50,13 @@ Resources:
       ProtocolType: HTTP
       Target: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${LambdaFunction.Arn}/invocations
 
+  HttpApiOverrides:
+    Type: AWS::ApiGatewayV2::ApiGatewayManagedOverrides
+    Properties:
+      ApiId: !Sub ${HttpApi}
+      Integration:
+        PayloadFormatVersion: "1.0"
+        
   # old style REST API
 
   RestApi:
@@ -104,7 +111,7 @@ Resources:
 Outputs:
 
   HttpApiUrl:
-    Value: !Sub https://${HttpApi}.execute-api.eu-central-1.amazonaws.com/
+    Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/
 
   RestApiUrl:
-    Value: !Sub https://${RestApi}.execute-api.eu-central-1.amazonaws.com/${StageApi}
+    Value: !Sub https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/${StageApi}
