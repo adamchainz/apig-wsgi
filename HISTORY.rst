@@ -1,6 +1,9 @@
 History
 =======
 
+2.7.0 (2020-07-13)
+------------------
+
 * Add defaults for ``SERVER_HOST``, ``SERVER_PORT`` and ``wsgi.url_scheme``.
   This enables responding to `ELB health check events
   <https://docs.aws.amazon.com/elasticloadbalancing/latest/application/lambda-functions.html#enable-health-checks-lambda>`__,
