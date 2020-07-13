@@ -472,6 +472,29 @@ def test_full_event(simple_app):
     assert simple_app.environ["apig_wsgi.full_event"] == event
 
 
+def test_elb_health_check(simple_app):
+    """
+    Check compatibility with health check events as per:
+    https://docs.aws.amazon.com/elasticloadbalancing/latest/application/lambda-functions.html#enable-health-checks-lambda  # noqa: B950
+    """
+    event = {
+        "requestContext": {"elb": {"targetGroupArn": "..."}},
+        "httpMethod": "GET",
+        "path": "/",
+        "queryStringParameters": {},
+        "headers": {"user-agent": "ELB-HealthChecker/2.0"},
+        "body": "",
+        "isBase64Encoded": False,
+    }
+
+    simple_app.handler(event, None)
+
+    environ = simple_app.environ
+    assert environ["SERVER_NAME"] == ""
+    assert environ["SERVER_PORT"] == ""
+    assert environ["wsgi.url_scheme"] == "http"
+
+
 def test_context(simple_app):
     context = ContextStub(aws_request_id="test-request-id")
 

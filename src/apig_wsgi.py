@@ -62,12 +62,15 @@ def get_environ(event, context, binary_support):
         "REQUEST_METHOD": method,
         "SCRIPT_NAME": "",
         "SERVER_PROTOCOL": "HTTP/1.1",
+        "SERVER_NAME": "",
+        "SERVER_PORT": "",
         "wsgi.errors": sys.stderr,
         "wsgi.input": BytesIO(body),
         "wsgi.multiprocess": False,
         "wsgi.multithread": False,
         "wsgi.run_once": False,
         "wsgi.version": (1, 0),
+        "wsgi.url_scheme": "http",
     }
 
     # Multi-value query strings need explicit activation on ALB
