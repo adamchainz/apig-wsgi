@@ -39,7 +39,7 @@ def make_event(
     qs_params=None,
     qs_params_multi=True,
     headers=None,
-    headers_multi=True,
+    headers_multi=False,
     body="",
     binary=False,
     request_context=None,
@@ -50,7 +50,6 @@ def make_event(
     event = {
         "httpMethod": method,
         "path": "/",
-        "multiValueHeaders": headers,
     }
 
     if qs_params_multi:
@@ -114,6 +113,15 @@ def test_get(simple_app):
     assert response == {
         "statusCode": 200,
         "headers": {"Content-Type": "text/plain"},
+        "body": "Hello World\n",
+    }
+
+def test_get_multivalue_header_support(simple_app):
+    response = simple_app.handler(make_event(headers_multi=True), None)
+
+    assert response == {
+        "statusCode": 200,
+        "multiValueHeaders": {"Content-Type": ["text/plain"]},
         "body": "Hello World\n",
     }
 
@@ -342,7 +350,7 @@ def test_plain_header(simple_app):
 
 
 def test_plain_header_single(simple_app):
-    event = make_event(headers={"Test-Header": ["foobar"]}, headers_multi=False)
+    event = make_event(headers={"Test-Header": ["foobar"]})
 
     simple_app.handler(event, None)
 
@@ -350,7 +358,7 @@ def test_plain_header_single(simple_app):
 
 
 def test_plain_header_multi(simple_app):
-    event = make_event(headers={"Test-Header": ["foo", "bar"]})
+    event = make_event(headers={"Test-Header": ["foo", "bar"]}, headers_multi=True)
 
     simple_app.handler(event, None)
 
@@ -430,7 +438,6 @@ def test_x_forwarded_port(simple_app):
 def test_no_headers(simple_app):
     # allow headers to be missing from event
     event = make_event()
-    del event["multiValueHeaders"]
 
     simple_app.handler(event, None)
 

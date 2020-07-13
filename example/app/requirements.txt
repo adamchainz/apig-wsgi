@@ -4,7 +4,7 @@
 #
 #    pip-compile
 #
-apig-wsgi==2.6.0          # via -r requirements.in
+apig-wsgi==2.8.0          # via -r requirements.in
 asgiref==3.2.7            # via django
 django==3.0.7             # via -r requirements.in
 pytz==2020.1              # via django

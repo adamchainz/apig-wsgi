@@ -1,5 +1,6 @@
 import sys
 from base64 import b64decode, b64encode
+from collections import defaultdict
 from io import BytesIO
 
 __all__ = ("make_lambda_handler",)
@@ -38,6 +39,7 @@ def make_lambda_handler(
         response = Response(
             binary_support=binary_support,
             non_binary_content_type_prefixes=non_binary_content_type_prefixes,
+            multi_value_header_support=environ["wsgi.multivalue_headers"],
         )
         result = wsgi_app(environ, response.start_response)
         response.consume(result)
@@ -71,6 +73,7 @@ def get_environ(event, context, binary_support):
         "wsgi.run_once": False,
         "wsgi.version": (1, 0),
         "wsgi.url_scheme": "http",
+        "wsgi.multivalue_headers": False,
     }
 
     # Multi-value query strings need explicit activation on ALB
@@ -88,6 +91,7 @@ def get_environ(event, context, binary_support):
     if "multiValueHeaders" in event:
         # may be None when testing on console
         headers = event["multiValueHeaders"] or {}
+        environ["wsgi.multivalue_headers"] = True
     else:
         # may be None when testing on console
         single_headers = event.get("headers") or {}
@@ -121,12 +125,13 @@ def get_environ(event, context, binary_support):
 
 
 class Response(object):
-    def __init__(self, binary_support, non_binary_content_type_prefixes):
+    def __init__(self, binary_support, non_binary_content_type_prefixes, multi_value_header_support=False):
         self.status_code = 500
         self.headers = []
         self.body = BytesIO()
         self.binary_support = binary_support
         self.non_binary_content_type_prefixes = non_binary_content_type_prefixes
+        self.multi_value_header_support = multi_value_header_support
 
     def start_response(self, status, response_headers, exc_info=None):
         if exc_info is not None:
@@ -145,7 +150,15 @@ class Response(object):
                 result.close()
 
     def as_apig_response(self):
-        response = {"statusCode": self.status_code, "headers": dict(self.headers)}
+        response = {"statusCode": self.status_code}
+        # If there is a requirement for multi-value headers, then return the headers in the response as expected
+        if self.multi_value_header_support:
+            headers = defaultdict(list)
+            [headers[k].append(v) for k, v in self.headers]
+            response["multiValueHeaders"] = dict(headers)
+        else:
+            response["headers"] = dict(self.headers)
+
         if self._should_send_binary():
             response["isBase64Encoded"] = True
             response["body"] = b64encode(self.body.getvalue()).decode("utf-8")
