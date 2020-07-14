@@ -39,7 +39,7 @@ def make_lambda_handler(
         response = Response(
             binary_support=binary_support,
             non_binary_content_type_prefixes=non_binary_content_type_prefixes,
-            multi_value_header_support=environ["wsgi.multivalue_headers"],
+            multi_value_header_support=environ["apig_wsgi.multivalue_headers"],
         )
         result = wsgi_app(environ, response.start_response)
         response.consume(result)
@@ -73,7 +73,7 @@ def get_environ(event, context, binary_support):
         "wsgi.run_once": False,
         "wsgi.version": (1, 0),
         "wsgi.url_scheme": "http",
-        "wsgi.multivalue_headers": False,
+        "apig_wsgi.multivalue_headers": False,
     }
 
     # Multi-value query strings need explicit activation on ALB
@@ -91,7 +91,7 @@ def get_environ(event, context, binary_support):
     if "multiValueHeaders" in event:
         # may be None when testing on console
         headers = event["multiValueHeaders"] or {}
-        environ["wsgi.multivalue_headers"] = True
+        environ["apig_wsgi.multivalue_headers"] = True
     else:
         # may be None when testing on console
         single_headers = event.get("headers") or {}
