@@ -122,7 +122,12 @@ def test_get_missing_content_type(simple_app):
 
     response = simple_app.handler(make_event(), None)
 
-    assert response == {"statusCode": 200, "multiValueHeaders": {}, "body": "Hello World\n"}
+    assert response == {
+        "statusCode": 200,
+        "multiValueHeaders": {},
+        "body": "Hello World\n",
+    }
+
 
 def test_get_single_header(simple_app):
     response = simple_app.handler(make_event(headers_multi=False), None)
@@ -132,6 +137,7 @@ def test_get_single_header(simple_app):
         "headers": {"Content-Type": "text/plain"},
         "body": "Hello World\n",
     }
+
 
 @parametrize_default_text_content_type
 def test_get_binary_support_default_text_content_types(simple_app, text_content_type):
@@ -193,7 +199,10 @@ def test_get_binary_support_binary_default_text_with_gzip_content_encoding(
 
     assert response == {
         "statusCode": 200,
-        "multiValueHeaders": {"Content-Type": [text_content_type], "Content-Encoding": ["gzip"]},
+        "multiValueHeaders": {
+            "Content-Type": [text_content_type],
+            "Content-Encoding": ["gzip"],
+        },
         "body": b64encode(b"\x13\x37").decode("utf-8"),
         "isBase64Encoded": True,
     }
@@ -218,7 +227,10 @@ def test_get_binary_support_binary_custom_text_with_gzip_content_encoding(
 
     assert response == {
         "statusCode": 200,
-        "multiValueHeaders": {"Content-Type": [text_content_type], "Content-Encoding": ["gzip"]},
+        "multiValueHeaders": {
+            "Content-Type": [text_content_type],
+            "Content-Encoding": ["gzip"],
+        },
         "body": b64encode(b"\x13\x37").decode("utf-8"),
         "isBase64Encoded": True,
     }
@@ -355,8 +367,11 @@ def test_plain_header_single(simple_app):
 
     assert simple_app.environ["HTTP_TEST_HEADER"] == "foobar"
 
+
 def test_plain_header_single_multiple(simple_app):
-    event = make_event(headers={"Test-Header": ["foobar1", "foobar2"]}, headers_multi=False)
+    event = make_event(
+        headers={"Test-Header": ["foobar1", "foobar2"]}, headers_multi=False
+    )
 
     simple_app.handler(event, None)
 
