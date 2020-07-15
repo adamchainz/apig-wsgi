@@ -125,7 +125,12 @@ def get_environ(event, context, binary_support):
 
 
 class Response(object):
-    def __init__(self, binary_support, non_binary_content_type_prefixes, multi_value_header_support=False):
+    def __init__(
+        self,
+        binary_support,
+        non_binary_content_type_prefixes,
+        multi_value_header_support=False,
+    ):
         self.status_code = 500
         self.headers = []
         self.body = BytesIO()

@@ -75,6 +75,10 @@ Multiple values for headers and query parameters are supported. They are
 enabled automatically on API Gateway but need
 `explict activation on ALB's <https://docs.aws.amazon.com/elasticloadbalancing/latest/application/lambda-functions.html#multi-value-headers>`__.
 
+Note that for ALB ``multiValueHeaders``, this changes the input and output of how headers are accessed
+from ``headers`` to ``multiValueHeaders``. To check if this is enabled for the current context, check for the
+WSGI environ key ``apig_wsgi.multivalue_headers`` with a boolean flag indicating if ``multiValueHeaders`` are enabled.
+
 Example
 =======
 

@@ -39,7 +39,7 @@ def make_event(
     qs_params=None,
     qs_params_multi=True,
     headers=None,
-    headers_multi=False,
+    headers_multi=True,
     body="",
     binary=False,
     request_context=None,
@@ -112,15 +112,6 @@ def test_get(simple_app):
 
     assert response == {
         "statusCode": 200,
-        "headers": {"Content-Type": "text/plain"},
-        "body": "Hello World\n",
-    }
-
-def test_get_multivalue_header_support(simple_app):
-    response = simple_app.handler(make_event(headers_multi=True), None)
-
-    assert response == {
-        "statusCode": 200,
         "multiValueHeaders": {"Content-Type": ["text/plain"]},
         "body": "Hello World\n",
     }
@@ -131,8 +122,16 @@ def test_get_missing_content_type(simple_app):
 
     response = simple_app.handler(make_event(), None)
 
-    assert response == {"statusCode": 200, "headers": {}, "body": "Hello World\n"}
+    assert response == {"statusCode": 200, "multiValueHeaders": {}, "body": "Hello World\n"}
 
+def test_get_single_header(simple_app):
+    response = simple_app.handler(make_event(headers_multi=False), None)
+
+    assert response == {
+        "statusCode": 200,
+        "headers": {"Content-Type": "text/plain"},
+        "body": "Hello World\n",
+    }
 
 @parametrize_default_text_content_type
 def test_get_binary_support_default_text_content_types(simple_app, text_content_type):
@@ -142,7 +141,7 @@ def test_get_binary_support_default_text_content_types(simple_app, text_content_
     response = simple_app.handler(make_event(), None)
     assert response == {
         "statusCode": 200,
-        "headers": {"Content-Type": text_content_type},
+        "multiValueHeaders": {"Content-Type": [text_content_type]},
         "body": "Hello World\n",
     }
 
@@ -159,7 +158,7 @@ def test_get_binary_support_custom_text_content_types(simple_app, text_content_t
     response = simple_app.handler(make_event(), None)
     assert response == {
         "statusCode": 200,
-        "headers": {"Content-Type": text_content_type},
+        "multiValueHeaders": {"Content-Type": [text_content_type]},
         "body": "Hello World\n",
     }
 
@@ -173,7 +172,7 @@ def test_get_binary_support_binary(simple_app):
 
     assert response == {
         "statusCode": 200,
-        "headers": {"Content-Type": "application/octet-stream"},
+        "multiValueHeaders": {"Content-Type": ["application/octet-stream"]},
         "body": b64encode(b"\x13\x37").decode("utf-8"),
         "isBase64Encoded": True,
     }
@@ -194,7 +193,7 @@ def test_get_binary_support_binary_default_text_with_gzip_content_encoding(
 
     assert response == {
         "statusCode": 200,
-        "headers": {"Content-Type": text_content_type, "Content-Encoding": "gzip"},
+        "multiValueHeaders": {"Content-Type": [text_content_type], "Content-Encoding": ["gzip"]},
         "body": b64encode(b"\x13\x37").decode("utf-8"),
         "isBase64Encoded": True,
     }
@@ -219,7 +218,7 @@ def test_get_binary_support_binary_custom_text_with_gzip_content_encoding(
 
     assert response == {
         "statusCode": 200,
-        "headers": {"Content-Type": text_content_type, "Content-Encoding": "gzip"},
+        "multiValueHeaders": {"Content-Type": [text_content_type], "Content-Encoding": ["gzip"]},
         "body": b64encode(b"\x13\x37").decode("utf-8"),
         "isBase64Encoded": True,
     }
@@ -234,7 +233,7 @@ def test_get_binary_support_no_content_type(simple_app):
 
     assert response == {
         "statusCode": 200,
-        "headers": {},
+        "multiValueHeaders": {},
         "body": b64encode(b"\x13\x37").decode("utf-8"),
         "isBase64Encoded": True,
     }
@@ -249,7 +248,7 @@ def test_post(simple_app):
     assert simple_app.environ["CONTENT_LENGTH"] == str(len(b"The World is Large"))
     assert response == {
         "statusCode": 200,
-        "headers": {"Content-Type": "text/plain"},
+        "multiValueHeaders": {"Content-Type": ["text/plain"]},
         "body": "Hello World\n",
     }
 
@@ -264,7 +263,7 @@ def test_post_binary_support(simple_app):
     assert simple_app.environ["CONTENT_LENGTH"] == str(len(b"dogfood"))
     assert response == {
         "statusCode": 200,
-        "headers": {"Content-Type": "text/plain"},
+        "multiValueHeaders": {"Content-Type": ["text/plain"]},
         "body": "Hello World\n",
     }
 
@@ -350,15 +349,22 @@ def test_plain_header(simple_app):
 
 
 def test_plain_header_single(simple_app):
-    event = make_event(headers={"Test-Header": ["foobar"]})
+    event = make_event(headers={"Test-Header": ["foobar"]}, headers_multi=False)
 
     simple_app.handler(event, None)
 
     assert simple_app.environ["HTTP_TEST_HEADER"] == "foobar"
 
+def test_plain_header_single_multiple(simple_app):
+    event = make_event(headers={"Test-Header": ["foobar1", "foobar2"]}, headers_multi=False)
+
+    simple_app.handler(event, None)
+
+    assert simple_app.environ["HTTP_TEST_HEADER"] == "foobar2"
+
 
 def test_plain_header_multi(simple_app):
-    event = make_event(headers={"Test-Header": ["foo", "bar"]}, headers_multi=True)
+    event = make_event(headers={"Test-Header": ["foo", "bar"]})
 
     simple_app.handler(event, None)
 
@@ -438,6 +444,7 @@ def test_x_forwarded_port(simple_app):
 def test_no_headers(simple_app):
     # allow headers to be missing from event
     event = make_event()
+    del event["multiValueHeaders"]
 
     simple_app.handler(event, None)
 
@@ -489,7 +496,7 @@ def test_elb_health_check(simple_app):
         "httpMethod": "GET",
         "path": "/",
         "queryStringParameters": {},
-        "headers": {"user-agent": "ELB-HealthChecker/2.0"},
+        "multiValueHeaders": {"user-agent": ["ELB-HealthChecker/2.0"]},
         "body": "",
         "isBase64Encoded": False,
     }
