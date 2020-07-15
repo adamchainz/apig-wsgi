@@ -156,7 +156,7 @@ class Response(object):
 
     def as_apig_response(self):
         response = {"statusCode": self.status_code}
-        # If there is a requirement for multi-value headers, then return the headers in the response as expected
+        # Return multiValueHeaders as header if support is required
         if self.multi_value_header_support:
             headers = defaultdict(list)
             [headers[k].append(v) for k, v in self.headers]
