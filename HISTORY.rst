@@ -1,12 +1,7 @@
 History
 =======
 
-* Add support for ``multiValueHeaders`` in the response object.
-  The environment variable to determine if ``multiValueHeaders`` are present is provided is ``apig_wsgi.multivalue_headers``.
-  This is to enable `ELB/ ALB with Lambda targets with multivalue headers enabled
-  <https://docs.aws.amazon.com/elasticloadbalancing/latest/application/lambda-functions.html#multi-value-headers-response>`__
-  to have multiple header values in the response object as well. Does not conflict with `API Gateway implementation
-  <https://docs.aws.amazon.com/apigateway/latest/developerguide/set-up-lambda-proxy-integrations.html#api-gateway-simple-proxy-for-lambda-output-format>`__.
+* Use multi-value headers in the response when given in the request.
   (`PR #157 <https://github.com/adamchainz/apig-wsgi/pull/157>`__).
 
 2.7.0 (2020-07-13)
