@@ -39,7 +39,7 @@ def make_lambda_handler(
         response = Response(
             binary_support=binary_support,
             non_binary_content_type_prefixes=non_binary_content_type_prefixes,
-            multi_value_header_support=environ["apig_wsgi.multivalue_headers"],
+            multi_value_headers=environ["apig_wsgi.multi_value_headers"],
         )
         result = wsgi_app(environ, response.start_response)
         response.consume(result)
@@ -73,7 +73,7 @@ def get_environ(event, context, binary_support):
         "wsgi.run_once": False,
         "wsgi.version": (1, 0),
         "wsgi.url_scheme": "http",
-        "apig_wsgi.multivalue_headers": False,
+        "apig_wsgi.multi_value_headers": False,
     }
 
     # Multi-value query strings need explicit activation on ALB
@@ -91,7 +91,7 @@ def get_environ(event, context, binary_support):
     if "multiValueHeaders" in event:
         # may be None when testing on console
         headers = event["multiValueHeaders"] or {}
-        environ["apig_wsgi.multivalue_headers"] = True
+        environ["apig_wsgi.multi_value_headers"] = True
     else:
         # may be None when testing on console
         single_headers = event.get("headers") or {}
@@ -129,14 +129,14 @@ class Response(object):
         self,
         binary_support,
         non_binary_content_type_prefixes,
-        multi_value_header_support=False,
+        multi_value_headers=False,
     ):
         self.status_code = 500
         self.headers = []
         self.body = BytesIO()
         self.binary_support = binary_support
         self.non_binary_content_type_prefixes = non_binary_content_type_prefixes
-        self.multi_value_header_support = multi_value_header_support
+        self.multi_value_headers = multi_value_headers
 
     def start_response(self, status, response_headers, exc_info=None):
         if exc_info is not None:
@@ -157,7 +157,7 @@ class Response(object):
     def as_apig_response(self):
         response = {"statusCode": self.status_code}
         # Return multiValueHeaders as header if support is required
-        if self.multi_value_header_support:
+        if self.multi_value_headers:
             headers = defaultdict(list)
             [headers[k].append(v) for k, v in self.headers]
             response["multiValueHeaders"] = dict(headers)

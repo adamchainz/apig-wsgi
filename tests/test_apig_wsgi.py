@@ -368,16 +368,6 @@ def test_plain_header_single(simple_app):
     assert simple_app.environ["HTTP_TEST_HEADER"] == "foobar"
 
 
-def test_plain_header_single_multiple(simple_app):
-    event = make_event(
-        headers={"Test-Header": ["foobar1", "foobar2"]}, headers_multi=False
-    )
-
-    simple_app.handler(event, None)
-
-    assert simple_app.environ["HTTP_TEST_HEADER"] == "foobar2"
-
-
 def test_plain_header_multi(simple_app):
     event = make_event(headers={"Test-Header": ["foo", "bar"]})
 
