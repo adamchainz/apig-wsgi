@@ -50,7 +50,6 @@ def make_event(
     event = {
         "httpMethod": method,
         "path": "/",
-        "multiValueHeaders": headers,
     }
 
     if qs_params_multi:
@@ -113,7 +112,7 @@ def test_get(simple_app):
 
     assert response == {
         "statusCode": 200,
-        "headers": {"Content-Type": "text/plain"},
+        "multiValueHeaders": {"Content-Type": ["text/plain"]},
         "body": "Hello World\n",
     }
 
@@ -123,7 +122,21 @@ def test_get_missing_content_type(simple_app):
 
     response = simple_app.handler(make_event(), None)
 
-    assert response == {"statusCode": 200, "headers": {}, "body": "Hello World\n"}
+    assert response == {
+        "statusCode": 200,
+        "multiValueHeaders": {},
+        "body": "Hello World\n",
+    }
+
+
+def test_get_single_header(simple_app):
+    response = simple_app.handler(make_event(headers_multi=False), None)
+
+    assert response == {
+        "statusCode": 200,
+        "headers": {"Content-Type": "text/plain"},
+        "body": "Hello World\n",
+    }
 
 
 @parametrize_default_text_content_type
@@ -134,7 +147,7 @@ def test_get_binary_support_default_text_content_types(simple_app, text_content_
     response = simple_app.handler(make_event(), None)
     assert response == {
         "statusCode": 200,
-        "headers": {"Content-Type": text_content_type},
+        "multiValueHeaders": {"Content-Type": [text_content_type]},
         "body": "Hello World\n",
     }
 
@@ -151,7 +164,7 @@ def test_get_binary_support_custom_text_content_types(simple_app, text_content_t
     response = simple_app.handler(make_event(), None)
     assert response == {
         "statusCode": 200,
-        "headers": {"Content-Type": text_content_type},
+        "multiValueHeaders": {"Content-Type": [text_content_type]},
         "body": "Hello World\n",
     }
 
@@ -165,7 +178,7 @@ def test_get_binary_support_binary(simple_app):
 
     assert response == {
         "statusCode": 200,
-        "headers": {"Content-Type": "application/octet-stream"},
+        "multiValueHeaders": {"Content-Type": ["application/octet-stream"]},
         "body": b64encode(b"\x13\x37").decode("utf-8"),
         "isBase64Encoded": True,
     }
@@ -186,7 +199,10 @@ def test_get_binary_support_binary_default_text_with_gzip_content_encoding(
 
     assert response == {
         "statusCode": 200,
-        "headers": {"Content-Type": text_content_type, "Content-Encoding": "gzip"},
+        "multiValueHeaders": {
+            "Content-Type": [text_content_type],
+            "Content-Encoding": ["gzip"],
+        },
         "body": b64encode(b"\x13\x37").decode("utf-8"),
         "isBase64Encoded": True,
     }
@@ -211,7 +227,10 @@ def test_get_binary_support_binary_custom_text_with_gzip_content_encoding(
 
     assert response == {
         "statusCode": 200,
-        "headers": {"Content-Type": text_content_type, "Content-Encoding": "gzip"},
+        "multiValueHeaders": {
+            "Content-Type": [text_content_type],
+            "Content-Encoding": ["gzip"],
+        },
         "body": b64encode(b"\x13\x37").decode("utf-8"),
         "isBase64Encoded": True,
     }
@@ -226,7 +245,7 @@ def test_get_binary_support_no_content_type(simple_app):
 
     assert response == {
         "statusCode": 200,
-        "headers": {},
+        "multiValueHeaders": {},
         "body": b64encode(b"\x13\x37").decode("utf-8"),
         "isBase64Encoded": True,
     }
@@ -241,7 +260,7 @@ def test_post(simple_app):
     assert simple_app.environ["CONTENT_LENGTH"] == str(len(b"The World is Large"))
     assert response == {
         "statusCode": 200,
-        "headers": {"Content-Type": "text/plain"},
+        "multiValueHeaders": {"Content-Type": ["text/plain"]},
         "body": "Hello World\n",
     }
 
@@ -256,7 +275,7 @@ def test_post_binary_support(simple_app):
     assert simple_app.environ["CONTENT_LENGTH"] == str(len(b"dogfood"))
     assert response == {
         "statusCode": 200,
-        "headers": {"Content-Type": "text/plain"},
+        "multiValueHeaders": {"Content-Type": ["text/plain"]},
         "body": "Hello World\n",
     }
 
@@ -482,7 +501,7 @@ def test_elb_health_check(simple_app):
         "httpMethod": "GET",
         "path": "/",
         "queryStringParameters": {},
-        "headers": {"user-agent": "ELB-HealthChecker/2.0"},
+        "multiValueHeaders": {"user-agent": ["ELB-HealthChecker/2.0"]},
         "body": "",
         "isBase64Encoded": False,
     }

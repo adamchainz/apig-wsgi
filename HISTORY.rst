@@ -1,6 +1,9 @@
 History
 =======
 
+* Use multi-value headers in the response when given in the request.
+  (`PR #157 <https://github.com/adamchainz/apig-wsgi/pull/157>`__).
+
 2.7.0 (2020-07-13)
 ------------------
 
