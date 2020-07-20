@@ -4,7 +4,7 @@ Example Application
 Requirements
 ------------
 
-Python 3.6+ on your path.
+Python 3.8.
 
 The Application
 ---------------
@@ -22,7 +22,9 @@ We use vanilla venv, pip, and Django to run:
    cd app
    python -m venv venv
    source venv/bin/activate
+   python -m pip install -U pip wheel
    python -m pip install -r requirements.txt
+   python -m pip install -e ../..
    python manage.py runserver
 
 Open it at http://127.0.0.1:8000/
@@ -43,6 +45,7 @@ other requirements into it, and run the deployment playbook:
    cd deployment
    python -m venv venv
    source venv/bin/activate
+   python -m pip install -U pip wheel
    python -m pip install -r requirements.txt
    ansible-playbook playbook.yml
 
