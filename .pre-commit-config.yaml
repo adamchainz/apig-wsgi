@@ -2,7 +2,7 @@
   hooks:
   - id: black
     name: black
-    entry: .tox/py38-codestyle/bin/black --diff
+    entry: .tox/py38-codestyle/bin/black
     language: system
     types: [python]
   - id: check-manifest
@@ -18,6 +18,6 @@
     types: [python]
   - id: isort
     name: isort
-    entry: .tox/py38-codestyle/bin/isort --diff
+    entry: .tox/py38-codestyle/bin/isort
     language: system
     types: [python]
