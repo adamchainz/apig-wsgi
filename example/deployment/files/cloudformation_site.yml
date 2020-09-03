@@ -56,7 +56,7 @@ Resources:
       ApiId: !Sub ${HttpApi}
       Integration:
         PayloadFormatVersion: "1.0"
-        
+
   # old style REST API
 
   RestApi:
