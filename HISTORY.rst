@@ -1,8 +1,7 @@
 History
 =======
 
-* Move license from ISC to MIT License - standardizing across my maintained
-  projects.
+* Move license from ISC to MIT License.
 
 2.7.0 (2020-07-20)
 ------------------
