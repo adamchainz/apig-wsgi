@@ -4,7 +4,7 @@ from io import BytesIO
 
 import pytest
 
-from apig_wsgi import make_lambda_handler
+from apig_wsgi import get_event_from_version, make_lambda_handler, v2_to_multivalue
 
 CUSTOM_NON_BINARY_CONTENT_TYPE_PREFIXES = ["test/custom", "application/vnd.custom"]
 
@@ -48,6 +48,7 @@ def make_event(
         headers = {"Host": ["example.com"]}
 
     event = {
+        "version": "1.0",
         "httpMethod": method,
         "path": "/",
     }
@@ -497,6 +498,7 @@ def test_elb_health_check(simple_app):
     https://docs.aws.amazon.com/elasticloadbalancing/latest/application/lambda-functions.html#enable-health-checks-lambda  # noqa: B950
     """
     event = {
+        "version": "1.0",
         "requestContext": {"elb": {"targetGroupArn": "..."}},
         "httpMethod": "GET",
         "path": "/",
@@ -520,3 +522,64 @@ def test_context(simple_app):
     simple_app.handler(make_event(), context)
 
     assert simple_app.environ["apig_wsgi.context"] == context
+
+
+def test_v2_to_multivalue():
+    obj = {
+        "Header1": "value1",
+        "Header2": "value1,value2",
+        "Header3": "value1,value2,value3",
+    }
+    expect = {
+        "Header1": ["value1"],
+        "Header2": ["value1", "value2"],
+        "Header3": ["value1", "value2", "value3"],
+    }
+
+    assert v2_to_multivalue(obj) == expect
+
+
+def test_get_event_from_version():
+    event = make_event()
+    assert get_event_from_version(event) == event
+
+    v2_event = {
+        "version": "2.0",
+        "rawPath": "/my/path",
+        "headers": {"Header1": "value1", "Header2": "value1,value2"},
+        "queryStringParameters": {"parameter1": "value1,value2", "parameter2": "value"},
+        "requestContext": {
+            "http": {
+                "method": "POST",
+                "path": "/my/path",
+                "protocol": "HTTP/1.1",
+                "sourceIp": "IP",
+                "userAgent": "agent",
+            },
+        },
+        "body": "Hello from Lambda",
+        "isBase64Encoded": False,
+    }
+
+    normalized_event = get_event_from_version(v2_event)
+    assert normalized_event["body"] == "Hello from Lambda"
+    assert normalized_event["httpMethod"] == "POST"
+    assert normalized_event["path"] == "/my/path"
+    assert normalized_event["isBase64Encoded"] is False
+    assert normalized_event["multiValueHeaders"] == {
+        "Header1": ["value1"],
+        "Header2": ["value1", "value2"],
+    }
+    assert normalized_event["multiValueQueryStringParameters"] == {
+        "parameter1": ["value1", "value2"],
+        "parameter2": ["value"],
+    }
+    assert normalized_event["requestContext"] == {
+        "http": {
+            "method": "POST",
+            "path": "/my/path",
+            "protocol": "HTTP/1.1",
+            "sourceIp": "IP",
+            "userAgent": "agent",
+        },
+    }

@@ -35,6 +35,7 @@ def make_lambda_handler(
     non_binary_content_type_prefixes = tuple(non_binary_content_type_prefixes)
 
     def handler(event, context):
+        event = get_event_from_version(event)
         environ = get_environ(event, context, binary_support=binary_support)
         response = Response(
             binary_support=binary_support,
@@ -46,6 +47,36 @@ def make_lambda_handler(
         return response.as_apig_response()
 
     return handler
+
+
+def v2_to_multivalue(obj):
+    multi_value = {}
+    for key, value in obj.items():
+        multi_value[key] = value.split(",")
+    return multi_value
+
+
+def get_event_from_version(event):
+    if event.get("version") == "1.0":
+        return event
+
+    headers = event.get("headers", {})
+    multi_value_headers = {}
+    for header, value in headers.items():
+        multi_value_headers[header] = value.split(",")
+
+    new_event = {
+        **event,
+        "body": event["body"],
+        "httpMethod": event["requestContext"]["http"]["method"],
+        "path": event["rawPath"],
+        "isBase64Encoded": event["isBase64Encoded"],
+        "multiValueHeaders": v2_to_multivalue(event.get("headers", {})),
+        "multiValueQueryStringParameters": v2_to_multivalue(
+            event.get("queryStringParameters", {})
+        ),
+    }
+    return new_event
 
 
 def get_environ(event, context, binary_support):
