@@ -35,7 +35,12 @@ def make_lambda_handler(
     non_binary_content_type_prefixes = tuple(non_binary_content_type_prefixes)
 
     def handler(event, context):
-        environ = get_environ(event, context, binary_support=binary_support)
+        if event["version"] == "1.0":
+            environ = get_environ_v1(event, context, binary_support=binary_support)
+        elif event["version"] == "2.0":
+            environ = get_environ_v2(event, context, binary_support=binary_support)
+        else:
+            raise ValueError("Unknown version {!r}".format(event["version"]))
         response = Response(
             binary_support=binary_support,
             non_binary_content_type_prefixes=non_binary_content_type_prefixes,
@@ -48,7 +53,7 @@ def make_lambda_handler(
     return handler
 
 
-def get_environ(event, context, binary_support):
+def get_environ_v1(event, context, binary_support):
     method = event["httpMethod"]
     body = event.get("body", "") or ""
     if event.get("isBase64Encoded", False):
@@ -112,6 +117,64 @@ def get_environ(event, context, binary_support):
 
         # Multi-value headers accumulate with ","
         environ["HTTP_" + key] = ",".join(values)
+
+    # Pass the AWS requestContext to the application
+    if "requestContext" in event:
+        environ["apig_wsgi.request_context"] = event["requestContext"]
+
+    # Pass the full event to the application as an escape hatch
+    environ["apig_wsgi.full_event"] = event
+    environ["apig_wsgi.context"] = context
+
+    return environ
+
+
+def get_environ_v2(event, context, binary_support):
+    method = event["httpMethod"]
+    body = event.get("body", "") or ""
+    if event.get("isBase64Encoded", False):
+        body = b64decode(body)
+    else:
+        body = body.encode("utf-8")
+
+    environ = {
+        "CONTENT_LENGTH": str(len(body)),
+        "HTTP": "on",
+        "PATH_INFO": event["path"],
+        "REMOTE_ADDR": "127.0.0.1",
+        "REQUEST_METHOD": method,
+        "QUERY_STRING": event["rawQueryString"],
+        "SCRIPT_NAME": "",
+        "SERVER_PROTOCOL": "HTTP/1.1",
+        "SERVER_NAME": "",
+        "SERVER_PORT": "",
+        "wsgi.errors": sys.stderr,
+        "wsgi.input": BytesIO(body),
+        "wsgi.multiprocess": False,
+        "wsgi.multithread": False,
+        "wsgi.run_once": False,
+        "wsgi.version": (1, 0),
+        "wsgi.url_scheme": "http",
+        "apig_wsgi.multi_value_headers": False,
+    }
+
+    for key, raw_value in event["headers"].items():
+        key = key.upper().replace("-", "_")
+
+        if key == "CONTENT_TYPE":
+            environ["CONTENT_TYPE"] = raw_value.split(",")[-1]
+        elif key == "HOST":
+            environ["SERVER_NAME"] = raw_value.split(",")[-1]
+        elif key == "X_FORWARDED_FOR":
+            # TODO
+            raise ValueError("Huh")
+            # environ["REMOTE_ADDR"] = values[-1].split(", ")[0]
+        elif key == "X_FORWARDED_PROTO":
+            environ["wsgi.url_scheme"] = raw_value.split(",")[-1]
+        elif key == "X_FORWARDED_PORT":
+            environ["SERVER_PORT"] = raw_value.split(",")[-1]
+
+        environ["HTTP_" + key] = raw_value
 
     # Pass the AWS requestContext to the application
     if "requestContext" in event:
