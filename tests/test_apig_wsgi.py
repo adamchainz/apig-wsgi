@@ -189,7 +189,7 @@ class TestV1Events:
 
     @parametrize_default_text_content_type
     def test_get_binary_support_binary_default_text_with_gzip_content_encoding(
-        simple_app, text_content_type
+        self, simple_app, text_content_type
     ):
         simple_app.handler = make_lambda_handler(simple_app, binary_support=True)
         simple_app.headers = [
