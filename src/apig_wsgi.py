@@ -151,8 +151,9 @@ class Response(object):
                 if data:
                     self.body.write(data)
         finally:
-            if hasattr(result, "close"):
-                result.close()
+            close = getattr(result, "close", None)
+            if close:
+                close()
 
     def as_apig_response(self):
         response = {"statusCode": self.status_code}
