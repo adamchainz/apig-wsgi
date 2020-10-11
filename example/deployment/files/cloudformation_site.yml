@@ -1,6 +1,6 @@
 AWSTemplateFormatVersion: 2010-09-09
 
-Description: Site resources for agig-wsgi test app
+Description: Site resources for apig-wsgi test app
 
 Parameters:
 
@@ -55,7 +55,7 @@ Resources:
     Properties:
       ApiId: !Sub ${HttpApi}
       Integration:
-        PayloadFormatVersion: "1.0"
+        PayloadFormatVersion: "2.0"
 
   # old style REST API
 
