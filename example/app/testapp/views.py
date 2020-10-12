@@ -1,3 +1,4 @@
+import random
 from html import escape
 from pprint import pformat
 
@@ -10,7 +11,8 @@ def index(request):
     request_context = pformat(request.environ.get("apig_wsgi.request_context", None))
     full_event = pformat(request.environ.get("apig_wsgi.full_event", None))
     environ = pformat(request.environ)
-    return HttpResponse(
+
+    response = HttpResponse(
         f"""
         <h1>Hello World!</h1>
         <h2>Headers</h2>
@@ -25,3 +27,10 @@ def index(request):
         <pre>{escape(environ)}</pre>
         """
     )
+    response.set_cookie(
+        "testcookie", str(random.randint(0, 1_000_000)), samesite="strict"
+    )
+    response.set_cookie(
+        "testcookie2", str(random.randint(0, 1_000_000)), samesite="strict"
+    )
+    return response
