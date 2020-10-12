@@ -329,14 +329,14 @@ class TestV1Events:
         assert simple_app.environ["QUERY_STRING"] == "foo=bar"
 
     def test_querystring_encoding_plus_value(self, simple_app):
-        event = make_v1_event(qs_params={"a": "b+c"}, qs_params_multi=False)
+        event = make_v1_event(qs_params={"a": ["b+c"]}, qs_params_multi=False)
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["QUERY_STRING"] == "a=b%2Bc"
 
     def test_querystring_encoding_plus_key(self, simple_app):
-        event = make_v1_event(qs_params={"a+b": "c"}, qs_params_multi=False)
+        event = make_v1_event(qs_params={"a+b": ["c"]}, qs_params_multi=False)
 
         simple_app.handler(event, None)
 
