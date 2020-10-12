@@ -46,18 +46,33 @@ Check out my book `Speed Up Your Django Tests <https://gumroad.com/l/suydt>`__ w
 Usage
 =====
 
-``make_lambda_handler(app, binary_support=False, non_binary_content_type_prefixes=None)``
------------------------------------------------------------------------------------------
+Use apig-wsgi in your lambda function that you attach to one of:
+
+* An ALB.
+* An API Gateway “REST API”.
+* An API Gateway “HTTP API”.
+
+Both “format version 1” and “format version 2” are supported
+(`documentation <https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html>`__).
+apig-wsgi will automatically detect the version in use. At time of writing,
+“format version 2” is only supported on HTTP API’s.
+
+``make_lambda_handler(app, binary_support=None, non_binary_content_type_prefixes=None)``
+----------------------------------------------------------------------------------------
 
 ``app`` should be a WSGI app, for example from Django's ``wsgi.py`` or Flask's
 ``Flask()`` object.
 
-If you want to support sending binary responses, set ``binary_support`` to
-``True``. Depending on how you're deploying your lambda function, binary
-responses may need extra configuration on AWS:
+``binary_support`` configures whether responses containing binary are
+supported. The default, ``None``, means to automatically detect this from the
+format version of the event - on it defaults to ``True`` for format version 2,
+and ``False`` for format version 1. Depending on how you're deploying your
+lambda function, you may need extra configuration before you can enable binary
+responses:
 
 * ALB’s support binary responses by default.
-* API Gateway HTTP API’s support binary responses by default.
+* API Gateway HTTP API’s support binary responses by default (and default to
+  event format version 2).
 * API Gateway REST API’s (the “old” style) require you to add ``'*/*'`` in the
   “binary media types” configuration. You will need to configure this through
   API Gateway directly, CloudFormation, SAM, or whatever tool your project is
@@ -68,19 +83,14 @@ responses may need extra configuration on AWS:
 
 Note that binary responses aren't sent if your response has a 'Content-Type'
 starting 'text/', 'application/json' or 'application/vnd.api+json' - this
-is to support sending larger text responses. To support other content types
-than the ones specified above, you can set ``non_binary_content_type_prefixes``
-to a list of content type prefixes of your choice (which replaces the default
-list).
-
-Both “format version 1” and “format version 2” are supported
-(`documentation <https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html>`__).
-apig-wsgi will automatically detect the version in use. At time of writing,
-“format version 2” is only supported on HTTP API’s.
+is to support sending larger text responses, since the base64 encoding would
+otherwise inflate the content length. To avoid base64 encoding other content
+types, you can set ``non_binary_content_type_prefixes`` to a list of content
+type prefixes of your choice (which replaces the default list).
 
 If the event from API Gateway contains the ``requestContext`` key, for example
-from custom request authorizers, this will be available in the WSGI environ
-at the key ``apig_wsgi.request_context``.
+on format version 2 or from custom request authorizers, this will be available
+in the WSGI environ at the key ``apig_wsgi.request_context``.
 
 If you want to inspect the full event from API Gateway, it's available in the
 WSGI environ at the key ``apig_wsgi.full_event``.

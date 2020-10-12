@@ -563,8 +563,8 @@ class TestV2Events:
             "statusCode": 200,
             "cookies": [],
             "headers": {},
-            "isBase64Encoded": False,
-            "body": "Hello World\n",
+            "isBase64Encoded": True,
+            "body": "SGVsbG8gV29ybGQK",
         }
 
     def test_set_one_cookie(self, simple_app):

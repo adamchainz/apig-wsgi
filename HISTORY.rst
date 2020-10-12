@@ -6,6 +6,8 @@ History
 * Support `format version
   2 <https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html>`,
   which was introduced by API Gateway for “HTTP API's”.
+* ``binary_support`` now defaults to ``None``, which means that it will
+  automatically enable binary support for format version 2 events.
 
 2.7.0 (2020-07-20)
 ------------------

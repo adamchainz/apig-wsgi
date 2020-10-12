@@ -13,7 +13,7 @@ DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES = (
 
 
 def make_lambda_handler(
-    wsgi_app, binary_support=False, non_binary_content_type_prefixes=None
+    wsgi_app, binary_support=None, non_binary_content_type_prefixes=None
 ):
     """
     Turn a WSGI app callable into a Lambda handler function suitable for
@@ -38,16 +38,20 @@ def make_lambda_handler(
         # Assume version 1 since ALB isn't documented as sending a version.
         version = event.get("version", "1.0")
         if version == "1.0":
-            environ = get_environ_v1(event, context, binary_support=binary_support)
+            # Binary support deafults 'off' on version 1
+            event_binary_support = binary_support or False
+            environ = get_environ_v1(
+                event, context, binary_support=event_binary_support
+            )
             response = V1Response(
-                binary_support=binary_support,
+                binary_support=event_binary_support,
                 non_binary_content_type_prefixes=non_binary_content_type_prefixes,
                 multi_value_headers=environ["apig_wsgi.multi_value_headers"],
             )
         elif version == "2.0":
             environ = get_environ_v2(event, context, binary_support=binary_support)
             response = V2Response(
-                binary_support=binary_support,
+                binary_support=True,
                 non_binary_content_type_prefixes=non_binary_content_type_prefixes,
             )
         else:
