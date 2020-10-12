@@ -185,14 +185,12 @@ class BaseResponse:
         self,
         binary_support,
         non_binary_content_type_prefixes,
-        multi_value_headers=False,
     ):
         self.status_code = 500
         self.headers = []
         self.body = BytesIO()
         self.binary_support = binary_support
         self.non_binary_content_type_prefixes = non_binary_content_type_prefixes
-        self.multi_value_headers = multi_value_headers
 
     def start_response(self, status, response_headers, exc_info=None):
         if exc_info is not None:
@@ -241,6 +239,10 @@ class BaseResponse:
 
 
 class V1Response(BaseResponse):
+    def __init__(self, *args, multi_value_headers, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.multi_value_headers = multi_value_headers
+
     def as_apig_response(self):
         response = {"statusCode": self.status_code}
         # Return multiValueHeaders as header if support is required
