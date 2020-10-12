@@ -183,6 +183,7 @@ def get_body(event):
 class BaseResponse:
     def __init__(
         self,
+        *,
         binary_support,
         non_binary_content_type_prefixes,
     ):
@@ -239,8 +240,8 @@ class BaseResponse:
 
 
 class V1Response(BaseResponse):
-    def __init__(self, *args, multi_value_headers, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *, multi_value_headers, **kwargs):
+        super().__init__(**kwargs)
         self.multi_value_headers = multi_value_headers
 
     def as_apig_response(self):
