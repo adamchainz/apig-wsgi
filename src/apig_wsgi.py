@@ -167,6 +167,9 @@ def get_environ_v2(event, context, binary_support):
             environ["wsgi.url_scheme"] = raw_value.split(",")[-1]
         elif key == "X_FORWARDED_PORT":
             environ["SERVER_PORT"] = raw_value.split(",")[-1]
+        elif key == "COOKIE":
+            environ["HTTP_COOKIE"] += ";" + raw_value
+            continue
 
         environ["HTTP_" + key] = raw_value
 

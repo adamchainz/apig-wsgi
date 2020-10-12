@@ -512,10 +512,13 @@ def make_v2_event(
     host="example.com",
     method="GET",
     query_string=None,
+    cookies=None,
     headers=None,
     body="",
     binary=False,
 ):
+    if cookies is None:
+        cookies = []
     if headers is None:
         headers = {"Host": "example.com"}
 
@@ -523,6 +526,7 @@ def make_v2_event(
         "version": "2.0",
         "rawQueryString": query_string,
         "headers": headers,
+        "cookies": cookies,
         "requestContext": {
             "http": {
                 "method": method,
@@ -538,6 +542,7 @@ def make_v2_event(
         event["isBase64Encoded"] = True
     else:
         event["body"] = body
+        event["isBase64Encoded"] = False
 
     return event
 
@@ -566,6 +571,35 @@ class TestV2Events:
             "isBase64Encoded": True,
             "body": "SGVsbG8gV29ybGQK",
         }
+
+    def test_cookie(self, simple_app):
+        simple_app.handler(make_v2_event(cookies=["testcookie=abc"]), None)
+
+        assert simple_app.environ["HTTP_COOKIE"] == "testcookie=abc"
+
+    def test_two_cookies(self, simple_app):
+        simple_app.handler(
+            make_v2_event(cookies=["testcookie=abc", "testcookie2=def"]), None
+        )
+
+        assert simple_app.environ["HTTP_COOKIE"] == "testcookie=abc;testcookie2=def"
+
+    def test_mixed_cookies(self, simple_app):
+        """
+        Check that if, somehow, API Gateway leaves a cookie as a "cookie"
+        header, we combine that with the 'cookies' key. The API Gateway
+        documentation doesn't directly specify that it always parses out all
+        Cookie headers, so this is a defence against this possible behaviour.
+        """
+        simple_app.handler(
+            make_v2_event(
+                cookies=["testcookie=abc"],
+                headers={"Content-Type": "text/plain", "Cookie": "testcookie2=def"},
+            ),
+            None,
+        )
+
+        assert simple_app.environ["HTTP_COOKIE"] == "testcookie=abc;testcookie2=def"
 
     def test_set_one_cookie(self, simple_app):
         simple_app.headers = [
