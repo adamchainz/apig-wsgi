@@ -1,6 +1,9 @@
 History
 =======
 
+2.9.0 (2020-10-12)
+------------------
+
 * Move license from ISC to MIT License.
 * Always send ``isBase64Encoded`` in responses, as per the AWS documentation.
 * Support `format version
@@ -9,7 +12,7 @@ History
 * ``binary_support`` now defaults to ``None``, which means that it will
   automatically enable binary support for format version 2 events.
 
-2.7.0 (2020-07-20)
+2.8.0 (2020-07-20)
 ------------------
 
 * Use multi-value headers in the response when given in the request.
