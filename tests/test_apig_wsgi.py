@@ -66,6 +66,7 @@ class ContextStub:
 
 
 def make_v1_event(
+    *,
     method="GET",
     qs_params=None,
     qs_params_multi=True,
@@ -118,6 +119,7 @@ class TestV1Events:
         assert response == {
             "statusCode": 200,
             "multiValueHeaders": {"Content-Type": ["text/plain"]},
+            "isBase64Encoded": False,
             "body": "Hello World\n",
         }
 
@@ -129,6 +131,7 @@ class TestV1Events:
         assert response == {
             "statusCode": 200,
             "multiValueHeaders": {},
+            "isBase64Encoded": False,
             "body": "Hello World\n",
         }
 
@@ -138,6 +141,7 @@ class TestV1Events:
         assert response == {
             "statusCode": 200,
             "headers": {"Content-Type": "text/plain"},
+            "isBase64Encoded": False,
             "body": "Hello World\n",
         }
 
@@ -152,6 +156,7 @@ class TestV1Events:
         assert response == {
             "statusCode": 200,
             "multiValueHeaders": {"Content-Type": [text_content_type]},
+            "isBase64Encoded": False,
             "body": "Hello World\n",
         }
 
@@ -170,6 +175,7 @@ class TestV1Events:
         assert response == {
             "statusCode": 200,
             "multiValueHeaders": {"Content-Type": [text_content_type]},
+            "isBase64Encoded": False,
             "body": "Hello World\n",
         }
 
@@ -183,8 +189,8 @@ class TestV1Events:
         assert response == {
             "statusCode": 200,
             "multiValueHeaders": {"Content-Type": ["application/octet-stream"]},
-            "body": b64encode(b"\x13\x37").decode("utf-8"),
             "isBase64Encoded": True,
+            "body": b64encode(b"\x13\x37").decode("utf-8"),
         }
 
     @parametrize_default_text_content_type
@@ -206,8 +212,8 @@ class TestV1Events:
                 "Content-Type": [text_content_type],
                 "Content-Encoding": ["gzip"],
             },
-            "body": b64encode(b"\x13\x37").decode("utf-8"),
             "isBase64Encoded": True,
+            "body": b64encode(b"\x13\x37").decode("utf-8"),
         }
 
     @parametrize_custom_text_content_type
@@ -233,8 +239,8 @@ class TestV1Events:
                 "Content-Type": [text_content_type],
                 "Content-Encoding": ["gzip"],
             },
-            "body": b64encode(b"\x13\x37").decode("utf-8"),
             "isBase64Encoded": True,
+            "body": b64encode(b"\x13\x37").decode("utf-8"),
         }
 
     def test_get_binary_support_no_content_type(self, simple_app):
@@ -247,8 +253,8 @@ class TestV1Events:
         assert response == {
             "statusCode": 200,
             "multiValueHeaders": {},
-            "body": b64encode(b"\x13\x37").decode("utf-8"),
             "isBase64Encoded": True,
+            "body": b64encode(b"\x13\x37").decode("utf-8"),
         }
 
     def test_post(self, simple_app):
@@ -261,6 +267,7 @@ class TestV1Events:
         assert response == {
             "statusCode": 200,
             "multiValueHeaders": {"Content-Type": ["text/plain"]},
+            "isBase64Encoded": False,
             "body": "Hello World\n",
         }
 
@@ -275,6 +282,7 @@ class TestV1Events:
         assert response == {
             "statusCode": 200,
             "multiValueHeaders": {"Content-Type": ["text/plain"]},
+            "isBase64Encoded": False,
             "body": "Hello World\n",
         }
 
