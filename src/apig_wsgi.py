@@ -35,17 +35,22 @@ def make_lambda_handler(
     non_binary_content_type_prefixes = tuple(non_binary_content_type_prefixes)
 
     def handler(event, context):
-        if event["version"] == "1.0":
+        version = event["version"]
+        if version == "1.0":
             environ = get_environ_v1(event, context, binary_support=binary_support)
-        elif event["version"] == "2.0":
+            response = V1Response(
+                binary_support=binary_support,
+                non_binary_content_type_prefixes=non_binary_content_type_prefixes,
+                multi_value_headers=environ["apig_wsgi.multi_value_headers"],
+            )
+        elif version == "2.0":
             environ = get_environ_v2(event, context, binary_support=binary_support)
+            response = V2Response(
+                binary_support=binary_support,
+                non_binary_content_type_prefixes=non_binary_content_type_prefixes,
+            )
         else:
             raise ValueError("Unknown version {!r}".format(event["version"]))
-        response = Response(
-            binary_support=binary_support,
-            non_binary_content_type_prefixes=non_binary_content_type_prefixes,
-            multi_value_headers=environ["apig_wsgi.multi_value_headers"],
-        )
         result = wsgi_app(environ, response.start_response)
         response.consume(result)
         return response.as_apig_response()
@@ -54,19 +59,13 @@ def make_lambda_handler(
 
 
 def get_environ_v1(event, context, binary_support):
-    method = event["httpMethod"]
-    body = event.get("body", "") or ""
-    if event.get("isBase64Encoded", False):
-        body = b64decode(body)
-    else:
-        body = body.encode("utf-8")
-
+    body = get_body(event)
     environ = {
         "CONTENT_LENGTH": str(len(body)),
         "HTTP": "on",
         "PATH_INFO": event["path"],
         "REMOTE_ADDR": "127.0.0.1",
-        "REQUEST_METHOD": method,
+        "REQUEST_METHOD": event["httpMethod"],
         "SCRIPT_NAME": "",
         "SERVER_PROTOCOL": "HTTP/1.1",
         "SERVER_NAME": "",
@@ -118,11 +117,8 @@ def get_environ_v1(event, context, binary_support):
         # Multi-value headers accumulate with ","
         environ["HTTP_" + key] = ",".join(values)
 
-    # Pass the AWS requestContext to the application
     if "requestContext" in event:
         environ["apig_wsgi.request_context"] = event["requestContext"]
-
-    # Pass the full event to the application as an escape hatch
     environ["apig_wsgi.full_event"] = event
     environ["apig_wsgi.context"] = context
 
@@ -130,24 +126,21 @@ def get_environ_v1(event, context, binary_support):
 
 
 def get_environ_v2(event, context, binary_support):
-    method = event["httpMethod"]
-    body = event.get("body", "") or ""
-    if event.get("isBase64Encoded", False):
-        body = b64decode(body)
-    else:
-        body = body.encode("utf-8")
-
+    body = get_body(event)
+    headers = event["headers"]
+    http = event["requestContext"]["http"]
     environ = {
         "CONTENT_LENGTH": str(len(body)),
         "HTTP": "on",
-        "PATH_INFO": event["path"],
-        "REMOTE_ADDR": "127.0.0.1",
-        "REQUEST_METHOD": method,
+        "HTTP_COOKIE": ";".join(event.get("cookies", ())),
+        "PATH_INFO": http["path"],
         "QUERY_STRING": event["rawQueryString"],
+        "REMOTE_ADDR": http["sourceIp"],
+        "REQUEST_METHOD": http["method"],
         "SCRIPT_NAME": "",
-        "SERVER_PROTOCOL": "HTTP/1.1",
         "SERVER_NAME": "",
         "SERVER_PORT": "",
+        "SERVER_PROTOCOL": http["protocol"],
         "wsgi.errors": sys.stderr,
         "wsgi.input": BytesIO(body),
         "wsgi.multiprocess": False,
@@ -155,20 +148,16 @@ def get_environ_v2(event, context, binary_support):
         "wsgi.run_once": False,
         "wsgi.version": (1, 0),
         "wsgi.url_scheme": "http",
+        # For backwards compatibility with apps upgrading from v1
         "apig_wsgi.multi_value_headers": False,
     }
 
-    for key, raw_value in event["headers"].items():
+    for key, raw_value in headers.items():
         key = key.upper().replace("-", "_")
-
         if key == "CONTENT_TYPE":
             environ["CONTENT_TYPE"] = raw_value.split(",")[-1]
         elif key == "HOST":
             environ["SERVER_NAME"] = raw_value.split(",")[-1]
-        elif key == "X_FORWARDED_FOR":
-            # TODO
-            raise ValueError("Huh")
-            # environ["REMOTE_ADDR"] = values[-1].split(", ")[0]
         elif key == "X_FORWARDED_PROTO":
             environ["wsgi.url_scheme"] = raw_value.split(",")[-1]
         elif key == "X_FORWARDED_PORT":
@@ -176,18 +165,21 @@ def get_environ_v2(event, context, binary_support):
 
         environ["HTTP_" + key] = raw_value
 
-    # Pass the AWS requestContext to the application
-    if "requestContext" in event:
-        environ["apig_wsgi.request_context"] = event["requestContext"]
-
-    # Pass the full event to the application as an escape hatch
+    environ["apig_wsgi.request_context"] = event["requestContext"]
     environ["apig_wsgi.full_event"] = event
     environ["apig_wsgi.context"] = context
 
     return environ
 
 
-class Response(object):
+def get_body(event):
+    body = event.get("body", "") or ""
+    if event.get("isBase64Encoded", False):
+        return b64decode(body)
+    return body.encode("utf-8")
+
+
+class BaseResponse:
     def __init__(
         self,
         binary_support,
@@ -218,24 +210,6 @@ class Response(object):
             if close:
                 close()
 
-    def as_apig_response(self):
-        response = {"statusCode": self.status_code}
-        # Return multiValueHeaders as header if support is required
-        if self.multi_value_headers:
-            headers = defaultdict(list)
-            [headers[k].append(v) for k, v in self.headers]
-            response["multiValueHeaders"] = dict(headers)
-        else:
-            response["headers"] = dict(self.headers)
-
-        if self._should_send_binary():
-            response["isBase64Encoded"] = True
-            response["body"] = b64encode(self.body.getvalue()).decode("utf-8")
-        else:
-            response["body"] = self.body.getvalue().decode("utf-8")
-
-        return response
-
     def _should_send_binary(self):
         """
         Determines if binary response should be sent to API Gateway
@@ -263,3 +237,52 @@ class Response(object):
         if len(matching_headers):
             return matching_headers[-1]
         return None
+
+
+class V1Response(BaseResponse):
+    def as_apig_response(self):
+        response = {"statusCode": self.status_code}
+        # Return multiValueHeaders as header if support is required
+        if self.multi_value_headers:
+            headers = defaultdict(list)
+            [headers[k].append(v) for k, v in self.headers]
+            response["multiValueHeaders"] = dict(headers)
+        else:
+            response["headers"] = dict(self.headers)
+
+        if self._should_send_binary():
+            response["isBase64Encoded"] = True
+            response["body"] = b64encode(self.body.getvalue()).decode("utf-8")
+        else:
+            response["isBase64Encoded"] = False
+            response["body"] = self.body.getvalue().decode("utf-8")
+
+        return response
+
+
+class V2Response(BaseResponse):
+    def as_apig_response(self):
+        response = {
+            "statusCode": self.status_code,
+        }
+
+        headers = {}
+        cookies = []
+        for key, value in self.headers:
+            key_lower = key.lower()
+            if key_lower == "set-cookie":
+                cookies.append(value)
+            else:
+                headers[key_lower] = value
+
+        response["cookies"] = cookies
+        response["headers"] = headers
+
+        if self._should_send_binary():
+            response["isBase64Encoded"] = True
+            response["body"] = b64encode(self.body.getvalue()).decode("utf-8")
+        else:
+            response["isBase64Encoded"] = False
+            response["body"] = self.body.getvalue().decode("utf-8")
+
+        return response
