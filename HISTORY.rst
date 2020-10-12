@@ -2,6 +2,10 @@ History
 =======
 
 * Move license from ISC to MIT License.
+* Always send ``isBase64Encoded`` in responses, as per the AWS documentation.
+* Support `format version
+  2 <https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html>`,
+  which was introduced by API Gateway for “HTTP API's”.
 
 2.7.0 (2020-07-20)
 ------------------
