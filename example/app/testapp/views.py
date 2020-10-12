@@ -1,8 +1,11 @@
 import random
 from html import escape
+from pathlib import Path
 from pprint import pformat
 
 from django.http import HttpResponse
+
+MODULE_DIR = Path(__file__).resolve(strict=True).parent
 
 
 def index(request):
@@ -14,17 +17,25 @@ def index(request):
 
     response = HttpResponse(
         f"""
-        <h1>Hello World!</h1>
-        <h2>Headers</h2>
-        <pre>{escape(headers)}</pre>
-        <h2>Query Params</h2>
-        <pre>{escape(params)}</pre>
-        <h2>Request Context</h2>
-        <pre>{escape(request_context)}</pre>
-        <h2>Full event</h2>
-        <pre>{escape(full_event)}</pre>
-        <h2>WSGI Environ</h2>
-        <pre>{escape(environ)}</pre>
+        <html>
+          <head>
+            <title>apig-wsgi test app</title>
+            <link rel="shortcut icon" type="image/x-icon" href="./favicon.ico">
+          </head>
+          <body>
+            <h1>Hello World!</h1>
+            <h2>Headers</h2>
+            <pre>{escape(headers)}</pre>
+            <h2>Query Params</h2>
+            <pre>{escape(params)}</pre>
+            <h2>Request Context</h2>
+            <pre>{escape(request_context)}</pre>
+            <h2>Full event</h2>
+            <pre>{escape(full_event)}</pre>
+            <h2>WSGI Environ</h2>
+            <pre>{escape(environ)}</pre>
+          </body>
+        </html>
         """
     )
     response.set_cookie(
@@ -34,3 +45,10 @@ def index(request):
         "testcookie2", str(random.randint(0, 1_000_000)), samesite="strict"
     )
     return response
+
+
+def favicon(request):
+    return HttpResponse(
+        (MODULE_DIR / "favicon.ico").read_bytes(),
+        content_type="image/x-icon",
+    )

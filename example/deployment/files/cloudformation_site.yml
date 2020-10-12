@@ -63,6 +63,8 @@ Resources:
     Type: AWS::ApiGateway::RestApi
     Properties:
       Name: apig-wsgi-testapp
+      BinaryMediaTypes:
+      - '*/*'
 
   RestApiRootANY:
     Type: AWS::ApiGateway::Method
@@ -114,4 +116,4 @@ Outputs:
     Value: !Sub https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com/
 
   RestApiUrl:
-    Value: !Sub https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/${StageApi}
+    Value: !Sub https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/${StageApi}/

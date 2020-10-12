@@ -53,17 +53,18 @@ Usage
 ``Flask()`` object.
 
 If you want to support sending binary responses, set ``binary_support`` to
-``True``. Depending on what you're deploying, binary responses may need extra
-configuration on AWS:
+``True``. Depending on how you're deploying your lambda function, binary
+responses may need extra configuration on AWS:
 
 * ALB’s support binary responses by default.
 * API Gateway HTTP API’s support binary responses by default.
-* API Gateway Rest API’s (the “old” style) require you to add ``'*/*'`` in the
+* API Gateway REST API’s (the “old” style) require you to add ``'*/*'`` in the
   “binary media types” configuration. You will need to configure this through
   API Gateway directly, CloudFormation, SAM, or whatever tool your project is
   using. Whilst this supports a list of binary media types, using ``'*/*'`` is
   the best way to configure it, since it is used to match the request 'Accept'
-  header as well, which WSGI applications often ignore.
+  header as well, which WSGI applications often ignore. You may need to delete
+  and recreate your stages for this value to be copied over.
 
 Note that binary responses aren't sent if your response has a 'Content-Type'
 starting 'text/', 'application/json' or 'application/vnd.api+json' - this
