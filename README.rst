@@ -53,19 +53,29 @@ Usage
 ``Flask()`` object.
 
 If you want to support sending binary responses, set ``binary_support`` to
-``True``. ALB's support binary responses by default, but on API Gateway you
-need to make sure you have ``'*/*'`` in the 'binary media types' configuration
-on your Rest API. You will need to configure this through API Gateway directly,
-CloudFormation, SAM, or whatever tool your project is using. Whilst API Gateway
-supports a list of binary media types, using ``'*/*'`` is the best way to
-configure this, since it is used to match the request 'Accept' header as well,
-which WSGI applications are likely to ignore.
+``True``. Depending on what you're deploying, binary responses may need extra
+configuration on AWS:
+
+* ALB’s support binary responses by default.
+* API Gateway HTTP API’s support binary responses by default.
+* API Gateway Rest API’s (the “old” style) require you to add ``'*/*'`` in the
+  “binary media types” configuration. You will need to configure this through
+  API Gateway directly, CloudFormation, SAM, or whatever tool your project is
+  using. Whilst this supports a list of binary media types, using ``'*/*'`` is
+  the best way to configure it, since it is used to match the request 'Accept'
+  header as well, which WSGI applications often ignore.
 
 Note that binary responses aren't sent if your response has a 'Content-Type'
 starting 'text/', 'application/json' or 'application/vnd.api+json' - this
 is to support sending larger text responses. To support other content types
 than the ones specified above, you can set ``non_binary_content_type_prefixes``
-to a list of content type prefixes of your choice.
+to a list of content type prefixes of your choice (which replaces the default
+list).
+
+Both “format version 1” and “format version 2” are supported
+(`documentation <https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html>`__).
+apig-wsgi will automatically detect the version in use. At time of writing,
+“format version 2” is only supported on HTTP API’s.
 
 If the event from API Gateway contains the ``requestContext`` key, for example
 from custom request authorizers, this will be available in the WSGI environ
@@ -78,9 +88,10 @@ If you need the
 `Lambda Context object <https://docs.aws.amazon.com/lambda/latest/dg/python-context.html>`__,
 it's available in the WSGI environ at the key ``apig_wsgi.context``.
 
-Multiple values for request and response headers and query parameters are
-supported. They are enabled automatically on API Gateway but need
-`explict activation on ALB's <https://docs.aws.amazon.com/elasticloadbalancing/latest/application/lambda-functions.html#multi-value-headers>`__.
+If you’re using “format version 1”, multiple values for request and response
+headers and query parameters are supported. They are enabled automatically on
+API Gateway but need `explict activation on
+ALB’s <https://docs.aws.amazon.com/elasticloadbalancing/latest/application/lambda-functions.html#multi-value-headers>`__.
 If you need to determine from within your application if multiple header values
 are enabled, you can can check the ``apgi_wsgi.multi_value_headers`` key in the
 WSGI environ, which is ``True`` if they are enabled and ``False`` otherwise.
