@@ -2,6 +2,7 @@ import sys
 from base64 import b64decode, b64encode
 from collections import defaultdict
 from io import BytesIO
+from urllib.parse import urlencode
 
 __all__ = ("make_lambda_handler",)
 
@@ -87,14 +88,13 @@ def get_environ_v1(event, context, binary_support):
 
     # Multi-value query strings need explicit activation on ALB
     if "multiValueQueryStringParameters" in event:
-        # may be None when testing on console
-        multi_params = event["multiValueQueryStringParameters"] or {}
+        environ["QUERY_STRING"] = urlencode(
+            # may be None when testing on console
+            event["multiValueQueryStringParameters"] or (),
+            doseq=True,
+        )
     else:
-        single_params = event.get("queryStringParameters") or {}
-        multi_params = {key: [value] for key, value in single_params.items()}
-    environ["QUERY_STRING"] = "&".join(
-        "{}={}".format(key, val) for (key, vals) in multi_params.items() for val in vals
-    )
+        environ["QUERY_STRING"] = urlencode(event.get("queryStringParameters") or ())
 
     # Multi-value headers need explicit activation on ALB
     if "multiValueHeaders" in event:

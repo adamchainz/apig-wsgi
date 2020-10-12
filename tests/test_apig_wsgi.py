@@ -328,19 +328,19 @@ class TestV1Events:
 
         assert simple_app.environ["QUERY_STRING"] == "foo=bar"
 
-    def test_querystring_encoding_value(self, simple_app):
-        event = make_v1_event(qs_params={"foo": ["a%20bar"]})
+    def test_querystring_encoding_plus_value(self, simple_app):
+        event = make_v1_event(qs_params={"a": ["b+c"]}, qs_params_multi=False)
 
         simple_app.handler(event, None)
 
-        assert simple_app.environ["QUERY_STRING"] == "foo=a%20bar"
+        assert simple_app.environ["QUERY_STRING"] == "a=b%2Bc"
 
-    def test_querystring_encoding_key(self, simple_app):
-        event = make_v1_event(qs_params={"a%20foo": ["bar"]})
+    def test_querystring_encoding_plus_key(self, simple_app):
+        event = make_v1_event(qs_params={"a+b": ["c"]}, qs_params_multi=False)
 
         simple_app.handler(event, None)
 
-        assert simple_app.environ["QUERY_STRING"] == "a%20foo=bar"
+        assert simple_app.environ["QUERY_STRING"] == "a%2Bb=c"
 
     def test_querystring_multi(self, simple_app):
         event = make_v1_event(qs_params={"foo": ["bar", "baz"]})
@@ -348,6 +348,20 @@ class TestV1Events:
         simple_app.handler(event, None)
 
         assert simple_app.environ["QUERY_STRING"] == "foo=bar&foo=baz"
+
+    def test_querystring_multi_encoding_plus_value(self, simple_app):
+        event = make_v1_event(qs_params={"a": ["b+c", "d"]})
+
+        simple_app.handler(event, None)
+
+        assert simple_app.environ["QUERY_STRING"] == "a=b%2Bc&a=d"
+
+    def test_querystring_multi_encoding_plus_key(self, simple_app):
+        event = make_v1_event(qs_params={"a+b": ["c"]})
+
+        simple_app.handler(event, None)
+
+        assert simple_app.environ["QUERY_STRING"] == "a%2Bb=c"
 
     def test_plain_header(self, simple_app):
         event = make_v1_event(headers={"Test-Header": ["foobar"]})

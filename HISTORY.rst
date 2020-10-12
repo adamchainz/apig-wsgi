@@ -3,6 +3,9 @@ History
 =======
 
 * Support Python 3.9.
+* Fix query string parameter encoding so that symbols are correctly re-encoded
+  for WSGI, for API Gateway format version 1
+  (`Issue #186 <https://github.com/adamchainz/apig-wsgi/pull/186>`__).
 
 2.9.0 (2020-10-12)
 ------------------
@@ -11,7 +14,8 @@ History
 * Always send ``isBase64Encoded`` in responses, as per the AWS documentation.
 * Support `format version
   2 <https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html>`,
-  which was introduced by API Gateway for “HTTP API's”.
+  which was introduced by API Gateway for “HTTP API's”
+  (`Issue #124 <https://github.com/adamchainz/apig-wsgi/pull/124>`__)..
 * ``binary_support`` now defaults to ``None``, which means that it will
   automatically enable binary support for format version 2 events.
 
