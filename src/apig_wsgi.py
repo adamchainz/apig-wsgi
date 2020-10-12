@@ -35,7 +35,8 @@ def make_lambda_handler(
     non_binary_content_type_prefixes = tuple(non_binary_content_type_prefixes)
 
     def handler(event, context):
-        version = event["version"]
+        # Assume version 1 since ALB isn't documented as sending a version.
+        version = event.get("version", "1.0")
         if version == "1.0":
             environ = get_environ_v1(event, context, binary_support=binary_support)
             response = V1Response(

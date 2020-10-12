@@ -480,7 +480,6 @@ class TestV1Events:
         https://docs.aws.amazon.com/elasticloadbalancing/latest/application/lambda-functions.html#enable-health-checks-lambda  # noqa: B950
         """
         event = {
-            "version": "1.0",
             "requestContext": {"elb": {"targetGroupArn": "..."}},
             "httpMethod": "GET",
             "path": "/",
