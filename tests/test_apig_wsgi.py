@@ -66,6 +66,7 @@ class ContextStub:
 
 
 def make_v1_event(
+    *,
     method="GET",
     qs_params=None,
     qs_params_multi=True,
@@ -73,7 +74,7 @@ def make_v1_event(
     headers_multi=True,
     body="",
     binary=False,
-    request_context=None,
+    request_context=None
 ):
     if headers is None:
         headers = {"Host": ["example.com"]}
@@ -118,6 +119,7 @@ class TestV1Events:
         assert response == {
             "statusCode": 200,
             "multiValueHeaders": {"Content-Type": ["text/plain"]},
+            "isBase64Encoded": False,
             "body": "Hello World\n",
         }
 
@@ -129,6 +131,7 @@ class TestV1Events:
         assert response == {
             "statusCode": 200,
             "multiValueHeaders": {},
+            "isBase64Encoded": False,
             "body": "Hello World\n",
         }
 
@@ -138,6 +141,7 @@ class TestV1Events:
         assert response == {
             "statusCode": 200,
             "headers": {"Content-Type": "text/plain"},
+            "isBase64Encoded": False,
             "body": "Hello World\n",
         }
 
@@ -152,6 +156,7 @@ class TestV1Events:
         assert response == {
             "statusCode": 200,
             "multiValueHeaders": {"Content-Type": [text_content_type]},
+            "isBase64Encoded": False,
             "body": "Hello World\n",
         }
 
@@ -170,6 +175,7 @@ class TestV1Events:
         assert response == {
             "statusCode": 200,
             "multiValueHeaders": {"Content-Type": [text_content_type]},
+            "isBase64Encoded": False,
             "body": "Hello World\n",
         }
 
@@ -183,8 +189,8 @@ class TestV1Events:
         assert response == {
             "statusCode": 200,
             "multiValueHeaders": {"Content-Type": ["application/octet-stream"]},
-            "body": b64encode(b"\x13\x37").decode("utf-8"),
             "isBase64Encoded": True,
+            "body": b64encode(b"\x13\x37").decode("utf-8"),
         }
 
     @parametrize_default_text_content_type
@@ -206,8 +212,8 @@ class TestV1Events:
                 "Content-Type": [text_content_type],
                 "Content-Encoding": ["gzip"],
             },
-            "body": b64encode(b"\x13\x37").decode("utf-8"),
             "isBase64Encoded": True,
+            "body": b64encode(b"\x13\x37").decode("utf-8"),
         }
 
     @parametrize_custom_text_content_type
@@ -233,8 +239,8 @@ class TestV1Events:
                 "Content-Type": [text_content_type],
                 "Content-Encoding": ["gzip"],
             },
-            "body": b64encode(b"\x13\x37").decode("utf-8"),
             "isBase64Encoded": True,
+            "body": b64encode(b"\x13\x37").decode("utf-8"),
         }
 
     def test_get_binary_support_no_content_type(self, simple_app):
@@ -247,8 +253,8 @@ class TestV1Events:
         assert response == {
             "statusCode": 200,
             "multiValueHeaders": {},
-            "body": b64encode(b"\x13\x37").decode("utf-8"),
             "isBase64Encoded": True,
+            "body": b64encode(b"\x13\x37").decode("utf-8"),
         }
 
     def test_post(self, simple_app):
@@ -261,6 +267,7 @@ class TestV1Events:
         assert response == {
             "statusCode": 200,
             "multiValueHeaders": {"Content-Type": ["text/plain"]},
+            "isBase64Encoded": False,
             "body": "Hello World\n",
         }
 
@@ -275,6 +282,7 @@ class TestV1Events:
         assert response == {
             "statusCode": 200,
             "multiValueHeaders": {"Content-Type": ["text/plain"]},
+            "isBase64Encoded": False,
             "body": "Hello World\n",
         }
 
@@ -472,7 +480,6 @@ class TestV1Events:
         https://docs.aws.amazon.com/elasticloadbalancing/latest/application/lambda-functions.html#enable-health-checks-lambda  # noqa: B950
         """
         event = {
-            "version": "1.0",
             "requestContext": {"elb": {"targetGroupArn": "..."}},
             "httpMethod": "GET",
             "path": "/",
@@ -495,3 +502,270 @@ class TestV1Events:
         simple_app.handler(make_v1_event(), context)
 
         assert simple_app.environ["apig_wsgi.context"] == context
+
+
+# v2 tests
+
+
+def make_v2_event(
+    *,
+    host="example.com",
+    method="GET",
+    query_string=None,
+    cookies=None,
+    headers=None,
+    body="",
+    binary=False
+):
+    if cookies is None:
+        cookies = []
+    if headers is None:
+        headers = {"Host": "example.com"}
+
+    event = {
+        "version": "2.0",
+        "rawQueryString": query_string,
+        "headers": headers,
+        "cookies": cookies,
+        "requestContext": {
+            "http": {
+                "method": method,
+                "path": "/",
+                "sourceIp": "1.2.3.4",
+                "protocol": "https",
+            },
+        },
+    }
+
+    if binary:
+        event["body"] = b64encode(body.encode("utf-8"))
+        event["isBase64Encoded"] = True
+    else:
+        event["body"] = body
+        event["isBase64Encoded"] = False
+
+    return event
+
+
+class TestV2Events:
+    def test_get(self, simple_app):
+        response = simple_app.handler(make_v2_event(), None)
+
+        assert response == {
+            "statusCode": 200,
+            "cookies": [],
+            "headers": {"content-type": "text/plain"},
+            "isBase64Encoded": False,
+            "body": "Hello World\n",
+        }
+
+    def test_get_missing_content_type(self, simple_app):
+        simple_app.headers = []
+
+        response = simple_app.handler(make_v2_event(), None)
+
+        assert response == {
+            "statusCode": 200,
+            "cookies": [],
+            "headers": {},
+            "isBase64Encoded": True,
+            "body": "SGVsbG8gV29ybGQK",
+        }
+
+    def test_cookie(self, simple_app):
+        simple_app.handler(make_v2_event(cookies=["testcookie=abc"]), None)
+
+        assert simple_app.environ["HTTP_COOKIE"] == "testcookie=abc"
+
+    def test_two_cookies(self, simple_app):
+        simple_app.handler(
+            make_v2_event(cookies=["testcookie=abc", "testcookie2=def"]), None
+        )
+
+        assert simple_app.environ["HTTP_COOKIE"] == "testcookie=abc;testcookie2=def"
+
+    def test_mixed_cookies(self, simple_app):
+        """
+        Check that if, somehow, API Gateway leaves a cookie as a "cookie"
+        header, we combine that with the 'cookies' key. The API Gateway
+        documentation doesn't directly specify that it always parses out all
+        Cookie headers, so this is a defence against this possible behaviour.
+        """
+        simple_app.handler(
+            make_v2_event(
+                cookies=["testcookie=abc"],
+                headers={"Content-Type": "text/plain", "Cookie": "testcookie2=def"},
+            ),
+            None,
+        )
+
+        assert simple_app.environ["HTTP_COOKIE"] == "testcookie=abc;testcookie2=def"
+
+    def test_set_one_cookie(self, simple_app):
+        simple_app.headers = [
+            ("Content-Type", "text/plain"),
+            ("Set-Cookie", "testcookie=1; Path=/; SameSite=strict"),
+        ]
+        response = simple_app.handler(make_v2_event(), None)
+
+        assert response == {
+            "statusCode": 200,
+            "cookies": ["testcookie=1; Path=/; SameSite=strict"],
+            "headers": {"content-type": "text/plain"},
+            "isBase64Encoded": False,
+            "body": "Hello World\n",
+        }
+
+    def test_set_two_cookies(self, simple_app):
+        simple_app.headers = [
+            ("Content-Type", "text/plain"),
+            ("Set-Cookie", "testcookie=abc; Path=/; SameSite=strict"),
+            ("Set-Cookie", "testcookie2=def; Path=/; SameSite=strict"),
+        ]
+        response = simple_app.handler(make_v2_event(), None)
+
+        assert response == {
+            "statusCode": 200,
+            "cookies": [
+                "testcookie=abc; Path=/; SameSite=strict",
+                "testcookie2=def; Path=/; SameSite=strict",
+            ],
+            "headers": {"content-type": "text/plain"},
+            "isBase64Encoded": False,
+            "body": "Hello World\n",
+        }
+
+    @parametrize_default_text_content_type
+    def test_get_binary_support_default_text_content_types(
+        self, simple_app, text_content_type
+    ):
+        simple_app.handler = make_lambda_handler(simple_app, binary_support=True)
+        simple_app.headers = [("Content-Type", text_content_type)]
+
+        response = simple_app.handler(make_v2_event(), None)
+        assert response == {
+            "statusCode": 200,
+            "cookies": [],
+            "headers": {"content-type": text_content_type},
+            "isBase64Encoded": False,
+            "body": "Hello World\n",
+        }
+
+    @parametrize_custom_text_content_type
+    def test_get_binary_support_custom_text_content_types(
+        self, simple_app, text_content_type
+    ):
+        simple_app.handler = make_lambda_handler(
+            simple_app,
+            binary_support=True,
+            non_binary_content_type_prefixes=CUSTOM_NON_BINARY_CONTENT_TYPE_PREFIXES,
+        )
+        simple_app.headers = [("Content-Type", text_content_type)]
+
+        response = simple_app.handler(make_v2_event(), None)
+        assert response == {
+            "statusCode": 200,
+            "cookies": [],
+            "headers": {"content-type": text_content_type},
+            "isBase64Encoded": False,
+            "body": "Hello World\n",
+        }
+
+    def test_get_binary_support_binary(self, simple_app):
+        simple_app.handler = make_lambda_handler(simple_app, binary_support=True)
+        simple_app.headers = [("Content-Type", "application/octet-stream")]
+        simple_app.response = b"\x13\x37"
+
+        response = simple_app.handler(make_v2_event(), None)
+
+        assert response == {
+            "statusCode": 200,
+            "cookies": [],
+            "headers": {"content-type": "application/octet-stream"},
+            "isBase64Encoded": True,
+            "body": b64encode(b"\x13\x37").decode("utf-8"),
+        }
+
+    @parametrize_default_text_content_type
+    def test_get_binary_support_binary_default_text_with_gzip_content_encoding(
+        self, simple_app, text_content_type
+    ):
+        simple_app.handler = make_lambda_handler(simple_app, binary_support=True)
+        simple_app.headers = [
+            ("Content-Type", text_content_type),
+            ("Content-Encoding", "gzip"),
+        ]
+        simple_app.response = b"\x13\x37"
+
+        response = simple_app.handler(make_v2_event(), None)
+
+        assert response == {
+            "statusCode": 200,
+            "cookies": [],
+            "headers": {
+                "content-type": text_content_type,
+                "content-encoding": "gzip",
+            },
+            "isBase64Encoded": True,
+            "body": b64encode(b"\x13\x37").decode("utf-8"),
+        }
+
+    @parametrize_custom_text_content_type
+    def test_get_binary_support_binary_custom_text_with_gzip_content_encoding(
+        self, simple_app, text_content_type
+    ):
+        simple_app.handler = make_lambda_handler(
+            simple_app,
+            binary_support=True,
+            non_binary_content_type_prefixes=CUSTOM_NON_BINARY_CONTENT_TYPE_PREFIXES,
+        )
+        simple_app.headers = [
+            ("Content-Type", text_content_type),
+            ("Content-Encoding", "gzip"),
+        ]
+        simple_app.response = b"\x13\x37"
+
+        response = simple_app.handler(make_v2_event(), None)
+
+        assert response == {
+            "statusCode": 200,
+            "cookies": [],
+            "headers": {
+                "content-type": text_content_type,
+                "content-encoding": "gzip",
+            },
+            "isBase64Encoded": True,
+            "body": b64encode(b"\x13\x37").decode("utf-8"),
+        }
+
+    def test_special_headers(self, simple_app):
+        event = make_v2_event(
+            headers={
+                "Content-Type": "text/plain",
+                "Host": "example.com",
+                "X-Forwarded-Proto": "https",
+                "X-Forwarded-Port": "123",
+            }
+        )
+
+        simple_app.handler(event, None)
+
+        assert simple_app.environ["CONTENT_TYPE"] == "text/plain"
+        assert simple_app.environ["HTTP_CONTENT_TYPE"] == "text/plain"
+        assert simple_app.environ["SERVER_NAME"] == "example.com"
+        assert simple_app.environ["HTTP_HOST"] == "example.com"
+        assert simple_app.environ["wsgi.url_scheme"] == "https"
+        assert simple_app.environ["HTTP_X_FORWARDED_PROTO"] == "https"
+        assert simple_app.environ["SERVER_PORT"] == "123"
+        assert simple_app.environ["HTTP_X_FORWARDED_PORT"] == "123"
+
+
+# unknown version test
+
+
+class TestUnknownVersionEvents:
+    def test_errors(self, simple_app):
+        with pytest.raises(ValueError) as excinfo:
+            simple_app.handler({"version": "distant-future"}, None)
+
+        assert str(excinfo.value) == "Unknown version 'distant-future'"
