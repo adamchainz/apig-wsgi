@@ -30,7 +30,7 @@ Resources:
       Handler: testapp.wsgi.lambda_handler
       MemorySize: 128
       Role: !Ref LambdaIAMRoleArn
-      Runtime: python3.7
+      Runtime: python3.8
       Timeout: 20
 
   LambdaPermission:
