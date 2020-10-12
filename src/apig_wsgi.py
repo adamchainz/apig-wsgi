@@ -188,12 +188,7 @@ def get_body(event):
 
 
 class BaseResponse:
-    def __init__(
-        self,
-        *,
-        binary_support,
-        non_binary_content_type_prefixes,
-    ):
+    def __init__(self, *, binary_support, non_binary_content_type_prefixes):
         self.status_code = 500
         self.headers = []
         self.body = BytesIO()
