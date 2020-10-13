@@ -2,6 +2,9 @@
 History
 =======
 
+2.9.1 (2020-10-13)
+------------------
+
 * Support Python 3.9.
 * Fix query string parameter encoding so that symbols are correctly re-encoded
   for WSGI, for API Gateway format version 1
