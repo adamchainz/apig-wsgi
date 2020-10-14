@@ -70,7 +70,7 @@ def get_environ_v1(event, context, binary_support):
     environ = {
         "CONTENT_LENGTH": str(len(body)),
         "HTTP": "on",
-        "PATH_INFO": urllib.parse.unquote(event["path"]),
+        "PATH_INFO": urllib.parse.unquote_plus(event["path"]),
         "REMOTE_ADDR": "127.0.0.1",
         "REQUEST_METHOD": event["httpMethod"],
         "SCRIPT_NAME": "",
@@ -140,7 +140,7 @@ def get_environ_v2(event, context, binary_support):
         "CONTENT_LENGTH": str(len(body)),
         "HTTP": "on",
         "HTTP_COOKIE": ";".join(event.get("cookies", ())),
-        "PATH_INFO": urllib.parse.unquote(http["path"]),
+        "PATH_INFO": urllib.parse.unquote_plus(http["path"]),
         "QUERY_STRING": event["rawQueryString"],
         "REMOTE_ADDR": http["sourceIp"],
         "REQUEST_METHOD": http["method"],
