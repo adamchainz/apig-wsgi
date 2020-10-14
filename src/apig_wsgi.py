@@ -71,7 +71,6 @@ def get_environ_v1(event, context, binary_support):
     environ = {
         "CONTENT_LENGTH": str(len(body)),
         "HTTP": "on",
-        # Replace %xx escapes by their single-character equivalent
         "PATH_INFO": urllib.parse.unquote(event["path"]),
         "REMOTE_ADDR": "127.0.0.1",
         "REQUEST_METHOD": event["httpMethod"],
