@@ -67,7 +67,6 @@ def make_lambda_handler(
 
 def get_environ_v1(event, context, binary_support):
     body = get_body(event)
-
     environ = {
         "CONTENT_LENGTH": str(len(body)),
         "HTTP": "on",
@@ -136,9 +135,6 @@ def get_environ_v2(event, context, binary_support):
     body = get_body(event)
     headers = event["headers"]
     http = event["requestContext"]["http"]
-
-    # Replace %xx escapes by their single-character equivalent
-    path_info = urllib.parse.unquote(http["path"])
 
     environ = {
         "CONTENT_LENGTH": str(len(body)),
