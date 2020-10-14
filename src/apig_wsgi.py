@@ -3,6 +3,7 @@ from base64 import b64decode, b64encode
 from collections import defaultdict
 from io import BytesIO
 from urllib.parse import urlencode
+import urllib
 
 __all__ = ("make_lambda_handler",)
 
@@ -66,10 +67,12 @@ def make_lambda_handler(
 
 def get_environ_v1(event, context, binary_support):
     body = get_body(event)
+
     environ = {
         "CONTENT_LENGTH": str(len(body)),
         "HTTP": "on",
-        "PATH_INFO": event["path"],
+        # Replace %xx escapes by their single-character equivalent
+        "PATH_INFO": urllib.parse.unquote(event["path"]),
         "REMOTE_ADDR": "127.0.0.1",
         "REQUEST_METHOD": event["httpMethod"],
         "SCRIPT_NAME": "",
@@ -134,11 +137,15 @@ def get_environ_v2(event, context, binary_support):
     body = get_body(event)
     headers = event["headers"]
     http = event["requestContext"]["http"]
+
+    # Replace %xx escapes by their single-character equivalent
+    path_info = urllib.parse.unquote(http["path"])
+
     environ = {
         "CONTENT_LENGTH": str(len(body)),
         "HTTP": "on",
         "HTTP_COOKIE": ";".join(event.get("cookies", ())),
-        "PATH_INFO": http["path"],
+        "PATH_INFO": urllib.parse.unquote(http["path"]),
         "QUERY_STRING": event["rawQueryString"],
         "REMOTE_ADDR": http["sourceIp"],
         "REQUEST_METHOD": http["method"],
