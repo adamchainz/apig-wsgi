@@ -294,14 +294,6 @@ class TestV1Events:
 
         assert simple_app.environ["PATH_INFO"] == "/api/path/info"
 
-    def test_path_no_unquoting(self, simple_app):
-        simple_app.handler = make_lambda_handler(simple_app, unquote_path=False)
-        event = make_v1_event(path="/api/path%2Finfo")
-
-        simple_app.handler(event, None)
-
-        assert simple_app.environ["PATH_INFO"] == "/api/path%2Finfo"
-
     def test_querystring_none(self, simple_app):
         event = make_v1_event()
 
@@ -796,14 +788,6 @@ class TestV2Events:
         simple_app.handler(event, None)
 
         assert simple_app.environ["PATH_INFO"] == "/api/path/info"
-
-    def test_path_no_unquoting(self, simple_app):
-        simple_app.handler = make_lambda_handler(simple_app, unquote_path=False)
-        event = make_v2_event(path="/api/path%2Finfo")
-
-        simple_app.handler(event, None)
-
-        assert simple_app.environ["PATH_INFO"] == "/api/path%2Finfo"
 
 
 # unknown version test

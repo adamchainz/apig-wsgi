@@ -15,10 +15,7 @@ DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES = (
 
 
 def make_lambda_handler(
-    wsgi_app,
-    binary_support=None,
-    non_binary_content_type_prefixes=None,
-    unquote_path=True,
+    wsgi_app, binary_support=None, non_binary_content_type_prefixes=None
 ):
     """
     Turn a WSGI app callable into a Lambda handler function suitable for
@@ -34,8 +31,6 @@ def make_lambda_handler(
         Tuple of content type prefixes which should be considered "Non-Binary" when
         `binray_support` is True. This prevents apig_wsgi from unexpectedly encoding
         non-binary responses as binary.
-    unquote_path : bool
-        Whether to unquote path associated to PATH_INFO
     """
     if non_binary_content_type_prefixes is None:
         non_binary_content_type_prefixes = DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES
@@ -48,10 +43,7 @@ def make_lambda_handler(
             # Binary support deafults 'off' on version 1
             event_binary_support = binary_support or False
             environ = get_environ_v1(
-                event,
-                context,
-                binary_support=event_binary_support,
-                unquote_path=unquote_path,
+                event, context, binary_support=event_binary_support
             )
             response = V1Response(
                 binary_support=event_binary_support,
@@ -59,9 +51,7 @@ def make_lambda_handler(
                 multi_value_headers=environ["apig_wsgi.multi_value_headers"],
             )
         elif version == "2.0":
-            environ = get_environ_v2(
-                event, context, binary_support=binary_support, unquote_path=unquote_path
-            )
+            environ = get_environ_v2(event, context, binary_support=binary_support)
             response = V2Response(
                 binary_support=True,
                 non_binary_content_type_prefixes=non_binary_content_type_prefixes,
@@ -75,14 +65,12 @@ def make_lambda_handler(
     return handler
 
 
-def get_environ_v1(event, context, binary_support, unquote_path):
+def get_environ_v1(event, context, binary_support):
     body = get_body(event)
     environ = {
         "CONTENT_LENGTH": str(len(body)),
         "HTTP": "on",
-        "PATH_INFO": urllib.parse.unquote(event["path"], encoding="iso-8859-1")
-        if unquote_path
-        else event["path"],
+        "PATH_INFO": urllib.parse.unquote(event["path"], encoding="iso-8859-1"),
         "REMOTE_ADDR": "127.0.0.1",
         "REQUEST_METHOD": event["httpMethod"],
         "SCRIPT_NAME": "",
@@ -143,7 +131,7 @@ def get_environ_v1(event, context, binary_support, unquote_path):
     return environ
 
 
-def get_environ_v2(event, context, binary_support, unquote_path):
+def get_environ_v2(event, context, binary_support):
     body = get_body(event)
     headers = event["headers"]
     http = event["requestContext"]["http"]
@@ -152,9 +140,7 @@ def get_environ_v2(event, context, binary_support, unquote_path):
         "CONTENT_LENGTH": str(len(body)),
         "HTTP": "on",
         "HTTP_COOKIE": ";".join(event.get("cookies", ())),
-        "PATH_INFO": urllib.parse.unquote(http["path"], encoding="iso-8859-1")
-        if unquote_path
-        else http["path"],
+        "PATH_INFO": urllib.parse.unquote(http["path"], encoding="iso-8859-1"),
         "QUERY_STRING": event["rawQueryString"],
         "REMOTE_ADDR": http["sourceIp"],
         "REQUEST_METHOD": http["method"],
