@@ -68,6 +68,7 @@ class ContextStub:
 def make_v1_event(
     *,
     method="GET",
+    path="/",
     qs_params=None,
     qs_params_multi=True,
     headers=None,
@@ -82,7 +83,7 @@ def make_v1_event(
     event = {
         "version": "1.0",
         "httpMethod": method,
-        "path": "/",
+        "path": path,
     }
 
     if qs_params_multi:
@@ -285,6 +286,13 @@ class TestV1Events:
             "isBase64Encoded": False,
             "body": "Hello World\n",
         }
+
+    def test_path_unquoting(self, simple_app):
+        event = make_v1_event(path="/api/path%2Finfo")
+
+        simple_app.handler(event, None)
+
+        assert simple_app.environ["PATH_INFO"] == "/api/path/info"
 
     def test_querystring_none(self, simple_app):
         event = make_v1_event()
@@ -525,6 +533,7 @@ def make_v2_event(
     *,
     host="example.com",
     method="GET",
+    path="/",
     query_string=None,
     cookies=None,
     headers=None,
@@ -544,7 +553,7 @@ def make_v2_event(
         "requestContext": {
             "http": {
                 "method": method,
-                "path": "/",
+                "path": path,
                 "sourceIp": "1.2.3.4",
                 "protocol": "https",
             },
@@ -772,6 +781,13 @@ class TestV2Events:
         assert simple_app.environ["HTTP_X_FORWARDED_PROTO"] == "https"
         assert simple_app.environ["SERVER_PORT"] == "123"
         assert simple_app.environ["HTTP_X_FORWARDED_PORT"] == "123"
+
+    def test_path_unquoting(self, simple_app):
+        event = make_v2_event(path="/api/path%2Finfo")
+
+        simple_app.handler(event, None)
+
+        assert simple_app.environ["PATH_INFO"] == "/api/path/info"
 
 
 # unknown version test

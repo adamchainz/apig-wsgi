@@ -1,4 +1,5 @@
 import sys
+import urllib
 from base64 import b64decode, b64encode
 from collections import defaultdict
 from io import BytesIO
@@ -69,7 +70,7 @@ def get_environ_v1(event, context, binary_support):
     environ = {
         "CONTENT_LENGTH": str(len(body)),
         "HTTP": "on",
-        "PATH_INFO": event["path"],
+        "PATH_INFO": urllib.parse.unquote(event["path"], encoding="iso-8859-1"),
         "REMOTE_ADDR": "127.0.0.1",
         "REQUEST_METHOD": event["httpMethod"],
         "SCRIPT_NAME": "",
@@ -134,11 +135,12 @@ def get_environ_v2(event, context, binary_support):
     body = get_body(event)
     headers = event["headers"]
     http = event["requestContext"]["http"]
+
     environ = {
         "CONTENT_LENGTH": str(len(body)),
         "HTTP": "on",
         "HTTP_COOKIE": ";".join(event.get("cookies", ())),
-        "PATH_INFO": http["path"],
+        "PATH_INFO": urllib.parse.unquote(http["path"], encoding="iso-8859-1"),
         "QUERY_STRING": event["rawQueryString"],
         "REMOTE_ADDR": http["sourceIp"],
         "REQUEST_METHOD": http["method"],
