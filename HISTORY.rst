@@ -2,6 +2,14 @@
 History
 =======
 
+2.9.2 (2020-10-16)
+------------------
+
+* Unquote paths, as per the WSGI specification. This fixes a bug where paths
+  like ``/api/path%2Finfo"`` were not correctly received by the application as
+  ``/api/path/info"``
+  (`Pull Request #188 <https://github.com/adamchainz/apig-wsgi/pull/188>`__).
+
 2.9.1 (2020-10-13)
 ------------------
 
