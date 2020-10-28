@@ -12,7 +12,7 @@ boto==2.49.0              # via -r requirements.in
 botocore==1.18.16         # via awscli, boto3, s3transfer
 cffi==1.14.3              # via cryptography
 colorama==0.4.3           # via awscli
-cryptography==3.1.1       # via ansible-base
+cryptography==3.2         # via ansible-base
 docutils==0.15.2          # via awscli
 jinja2==2.11.2            # via ansible-base
 jmespath==0.10.0          # via boto3, botocore
