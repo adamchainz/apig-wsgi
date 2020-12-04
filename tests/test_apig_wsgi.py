@@ -75,7 +75,7 @@ def make_v1_event(
     headers_multi=True,
     body="",
     binary=False,
-    request_context=None
+    request_context=None,
 ):
     if headers is None:
         headers = {"Host": ["example.com"]}
@@ -538,7 +538,7 @@ def make_v2_event(
     cookies=None,
     headers=None,
     body="",
-    binary=False
+    binary=False,
 ):
     if cookies is None:
         cookies = []
