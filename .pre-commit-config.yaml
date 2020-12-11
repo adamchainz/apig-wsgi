@@ -14,21 +14,3 @@ repos:
   rev: 20.8b1 # Replace by any tag/version: https://github.com/psf/black/tags
   hooks:
   - id: black
-- repo: local
-  hooks:
-  - id: check-manifest
-    name: check-manifest
-    entry: check-manifest
-    language: system
-    pass_filenames: false
-    files: ^MANIFEST\.in$
-  - id: flake8
-    name: flake8
-    entry: .tox/py39-codestyle/bin/flake8 --config=setup.cfg
-    language: system
-    types: [python]
-  - id: isort
-    name: isort
-    entry: .tox/py39-codestyle/bin/isort
-    language: system
-    types: [python]
