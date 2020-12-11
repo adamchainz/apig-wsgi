@@ -10,13 +10,12 @@ repos:
   - id: check-toml
   - id: end-of-file-fixer
   - id: trailing-whitespace
-- repo: local
+- repo: https://github.com/psf/black
+  rev: 20.8b1 # Replace by any tag/version: https://github.com/psf/black/tags
   hooks:
   - id: black
-    name: black
-    entry: .tox/py39-codestyle/bin/black
-    language: system
-    types: [python]
+- repo: local
+  hooks:
   - id: check-manifest
     name: check-manifest
     entry: check-manifest
