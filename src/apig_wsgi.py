@@ -5,6 +5,7 @@ from collections import defaultdict
 from io import BytesIO
 from urllib.parse import urlencode
 
+
 __all__ = ("make_lambda_handler",)
 
 DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES = (
