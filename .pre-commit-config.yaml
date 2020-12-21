@@ -24,6 +24,6 @@ repos:
   hooks:
   - id: flake8
 - repo: https://github.com/adamchainz/pre-commit-check-manifest
-  rev: 1.0.0
+  rev: 1.0.1
   hooks:
   - id: check-manifest
