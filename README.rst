@@ -5,6 +5,9 @@ apig-wsgi
 .. image:: https://img.shields.io/github/workflow/status/adamchainz/apig-wsgi/CI/master?style=for-the-badge
    :target: https://github.com/adamchainz/apig-wsgi/actions?workflow=CI
 
+.. image:: https://img.shields.io/coveralls/github/adamchainz/apig-wsgi/master?style=for-the-badge
+   :target: https://coveralls.io/r/adamchainz/apig-wsgi
+
 .. image:: https://img.shields.io/pypi/v/apig-wsgi.svg?style=for-the-badge
    :target: https://pypi.org/project/apig-wsgi/
 
