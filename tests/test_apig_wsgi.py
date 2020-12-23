@@ -525,6 +525,18 @@ class TestV1Events:
 
         assert simple_app.environ["apig_wsgi.context"] == context
 
+    def test_empty_and_uncloseable_content(self):
+        def app(environ, start_response):
+            start_response("200 OK", [], None)
+            return [b"Hi", b"", b" there!", b""]
+
+        handler = make_lambda_handler(app)
+        event = make_v1_event()
+
+        response = handler(event, None)
+
+        assert response["body"] == "Hi there!"
+
 
 # v2 tests
 
@@ -761,6 +773,13 @@ class TestV2Events:
             "body": b64encode(b"\x13\x37").decode("utf-8"),
         }
 
+    def test_plain_header(self, simple_app):
+        event = make_v2_event(headers={"Test-Header": "foo"})
+
+        simple_app.handler(event, None)
+
+        assert simple_app.environ["HTTP_TEST_HEADER"] == "foo"
+
     def test_special_headers(self, simple_app):
         event = make_v2_event(
             headers={
@@ -788,6 +807,18 @@ class TestV2Events:
         simple_app.handler(event, None)
 
         assert simple_app.environ["PATH_INFO"] == "/api/path/info"
+
+    def test_empty_and_uncloseable_content(self):
+        def app(environ, start_response):
+            start_response("200 OK", [], None)
+            return [b"Hi", b"", b" there!", b""]
+
+        handler = make_lambda_handler(app)
+        event = make_v2_event()
+
+        response = handler(event, None)
+
+        assert response["body"] == b64encode(b"Hi there!").decode("utf-8")
 
 
 # unknown version test
