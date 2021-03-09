@@ -619,6 +619,18 @@ class TestV2Events:
 
         assert simple_app.environ["HTTP_COOKIE"] == "testcookie=abc;testcookie2=def"
 
+    def test_cookie_with_escaped_chars(self, simple_app):
+        simple_app.handler(
+            make_v2_event(
+                cookies=[
+                    'testcookie=escaped double quote \\\\\\" escaped comma \\\\054'
+                ]
+            ),
+            None,
+        )
+
+        assert simple_app.environ["HTTP_COOKIE"] == 'testcookie=escaping \\" \\054'
+
     def test_mixed_cookies(self, simple_app):
         """
         Check that if, somehow, API Gateway leaves a cookie as a "cookie"
