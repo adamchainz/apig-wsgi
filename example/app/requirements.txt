@@ -4,9 +4,9 @@
 #
 #    pip-compile
 #
-asgiref==3.3.1
+asgiref==3.3.4
     # via django
-django==3.1.7
+django==3.2
     # via -r requirements.in
 pytz==2021.1
     # via django
