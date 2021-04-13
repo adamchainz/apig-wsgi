@@ -19,9 +19,6 @@ jobs:
         - 3.8
         - 3.9
 
-    env:
-      COVERALLS_REPO_TOKEN: 5I8mMq5GhYfYKLFeZeAKTBDVwP9iUx935
-
     steps:
     - uses: actions/checkout@v2
     - uses: actions/setup-python@v2
