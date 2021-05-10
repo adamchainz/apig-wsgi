@@ -15,7 +15,8 @@ DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES = (
 
 
 def make_lambda_handler(
-    wsgi_app, binary_support=None, non_binary_content_type_prefixes=None
+    wsgi_app, binary_support=None, non_binary_content_type_prefixes=None,
+    strip_stage_prefix=False
 ):
     """
     Turn a WSGI app callable into a Lambda handler function suitable for
@@ -31,6 +32,8 @@ def make_lambda_handler(
         Tuple of content type prefixes which should be considered "Non-Binary" when
         `binray_support` is True. This prevents apig_wsgi from unexpectedly encoding
         non-binary responses as binary.
+    strip_stage_prefix: bool
+        Whether to strip stage prefix from path when using APIG custom-domain
     """
     if non_binary_content_type_prefixes is None:
         non_binary_content_type_prefixes = DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES
@@ -43,7 +46,8 @@ def make_lambda_handler(
             # Binary support deafults 'off' on version 1
             event_binary_support = binary_support or False
             environ = get_environ_v1(
-                event, context, binary_support=event_binary_support
+                event, context, binary_support=event_binary_support,
+                strip_stage_prefix=strip_stage_prefix
             )
             response = V1Response(
                 binary_support=event_binary_support,
@@ -51,7 +55,8 @@ def make_lambda_handler(
                 multi_value_headers=environ["apig_wsgi.multi_value_headers"],
             )
         elif version == "2.0":
-            environ = get_environ_v2(event, context, binary_support=binary_support)
+            environ = get_environ_v2(event, context, binary_support=binary_support,
+                strip_stage_prefix=strip_stage_prefix)
             response = V2Response(
                 binary_support=True,
                 non_binary_content_type_prefixes=non_binary_content_type_prefixes,
@@ -65,7 +70,7 @@ def make_lambda_handler(
     return handler
 
 
-def get_environ_v1(event, context, binary_support):
+def get_environ_v1(event, context, binary_support, strip_stage_prefix):
     body = get_body(event)
     environ = {
         "CONTENT_LENGTH": str(len(body)),
@@ -123,6 +128,12 @@ def get_environ_v1(event, context, binary_support):
         # Multi-value headers accumulate with ","
         environ["HTTP_" + key] = ",".join(values)
 
+    if strip_stage_prefix and "requestContext" in event:
+        prefix = f"/{event['requestContext']['stage']}"
+        if environ['PATH_INFO'].startswith(prefix):
+            environ['SCRIPT_NAME'] += prefix
+            environ['PATH_INFO'] = environ['PATH_INFO'][len(prefix):]
+
     if "requestContext" in event:
         environ["apig_wsgi.request_context"] = event["requestContext"]
     environ["apig_wsgi.full_event"] = event
@@ -131,7 +142,7 @@ def get_environ_v1(event, context, binary_support):
     return environ
 
 
-def get_environ_v2(event, context, binary_support):
+def get_environ_v2(event, context, binary_support, strip_stage_prefix):
     body = get_body(event)
     headers = event["headers"]
     http = event["requestContext"]["http"]
@@ -174,6 +185,12 @@ def get_environ_v2(event, context, binary_support):
             continue
 
         environ["HTTP_" + key] = raw_value
+
+    if strip_stage_prefix:
+        prefix = f"/{event['requestContext']['stage']}"
+        if environ['PATH_INFO'].startswith(prefix):
+            environ['SCRIPT_NAME'] += prefix
+            environ['PATH_INFO'] = environ['PATH_INFO'][len(prefix):]
 
     environ["apig_wsgi.request_context"] = event["requestContext"]
     environ["apig_wsgi.full_event"] = event

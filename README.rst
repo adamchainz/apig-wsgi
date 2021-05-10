@@ -64,8 +64,7 @@ Both “format version 1” and “format version 2” are supported
 apig-wsgi will automatically detect the version in use. At time of writing,
 “format version 2” is only supported on HTTP API’s.
 
-``make_lambda_handler(app, binary_support=None, non_binary_content_type_prefixes=None)``
-----------------------------------------------------------------------------------------
+``make_lambda_handler(app, binary_support=None, non_binary_content_type_prefixes=None, strip_stage_prefix=False)``
 
 ``app`` should be a WSGI app, for example from Django's ``wsgi.py`` or Flask's
 ``Flask()`` object.
@@ -94,6 +93,12 @@ is to support sending larger text responses, since the base64 encoding would
 otherwise inflate the content length. To avoid base64 encoding other content
 types, you can set ``non_binary_content_type_prefixes`` to a list of content
 type prefixes of your choice (which replaces the default list).
+
+With API Gateway custom domain and multiple stages, request path is prefixed by
+the stage name. This could be awkward to handle in your wsgi app, especially
+since this is not true for the default stage : here the prefix is missing.
+When ``strip_stage_prefix`` is set and the path starts with the stage name found
+in the request context, that prefix is striped from the path.
 
 If the event from API Gateway contains the ``requestContext`` key, for example
 on format version 2 or from custom request authorizers, this will be available

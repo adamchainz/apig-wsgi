@@ -537,6 +537,36 @@ class TestV1Events:
 
         assert response["body"] == "Hi there!"
 
+    def test_strip_stage_prefix(self, simple_app):
+
+        event = make_v1_event(path="/test-stage/", request_context={"stage":"test-stage"})
+
+        simple_app.handler = make_lambda_handler(simple_app, strip_stage_prefix=True)
+        simple_app.handler(event, None)
+
+        assert simple_app.environ["PATH_INFO"] == "/"
+        assert simple_app.environ["SCRIPT_NAME"] == "/test-stage"
+
+    def test_strip_stage_prefix_unset(self, simple_app):
+
+        event = make_v1_event(path="/test-stage/", request_context={"stage":"test-stage"})
+
+        simple_app.handler = make_lambda_handler(simple_app)
+        simple_app.handler(event, None)
+
+        assert simple_app.environ["PATH_INFO"] == "/test-stage/"
+        assert simple_app.environ["SCRIPT_NAME"] == ""
+
+    def test_stage_prefix_not_matching(self, simple_app):
+
+        event = make_v1_event(path="/test-stage/", request_context={"stage":"other-stage"})
+
+        simple_app.handler = make_lambda_handler(simple_app, strip_stage_prefix=True)
+        simple_app.handler(event, None)
+
+        assert simple_app.environ["PATH_INFO"] == "/test-stage/"
+        assert simple_app.environ["SCRIPT_NAME"] == ""
+
 
 # v2 tests
 
@@ -551,6 +581,7 @@ def make_v2_event(
     headers=None,
     body="",
     binary=False,
+    request_context=None,
 ):
     if cookies is None:
         cookies = []
@@ -562,14 +593,14 @@ def make_v2_event(
         "rawQueryString": query_string,
         "headers": headers,
         "cookies": cookies,
-        "requestContext": {
+        "requestContext": dict({
             "http": {
                 "method": method,
                 "path": path,
                 "sourceIp": "1.2.3.4",
                 "protocol": "https",
             },
-        },
+        }, **(request_context or {})),
     }
 
     if binary:
@@ -819,6 +850,36 @@ class TestV2Events:
         response = handler(event, None)
 
         assert response["body"] == b64encode(b"Hi there!").decode("utf-8")
+
+    def test_strip_stage_prefix(self, simple_app):
+
+        event = make_v2_event(path="/test-stage/", request_context={"stage":"test-stage"})
+
+        simple_app.handler = make_lambda_handler(simple_app, strip_stage_prefix=True)
+        simple_app.handler(event, None)
+
+        assert simple_app.environ["PATH_INFO"] == "/"
+        assert simple_app.environ["SCRIPT_NAME"] == "/test-stage"
+
+    def test_strip_stage_prefix_unset(self, simple_app):
+
+        event = make_v2_event(path="/test-stage/", request_context={"stage":"test-stage"})
+
+        simple_app.handler = make_lambda_handler(simple_app)
+        simple_app.handler(event, None)
+
+        assert simple_app.environ["PATH_INFO"] == "/test-stage/"
+        assert simple_app.environ["SCRIPT_NAME"] == ""
+
+    def test_stage_prefix_not_matching(self, simple_app):
+
+        event = make_v2_event(path="/test-stage/", request_context={"stage":"other-stage"})
+
+        simple_app.handler = make_lambda_handler(simple_app, strip_stage_prefix=True)
+        simple_app.handler(event, None)
+
+        assert simple_app.environ["PATH_INFO"] == "/test-stage/"
+        assert simple_app.environ["SCRIPT_NAME"] == ""
 
 
 # unknown version test
