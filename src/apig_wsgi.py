@@ -15,8 +15,10 @@ DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES = (
 
 
 def make_lambda_handler(
-    wsgi_app, binary_support=None, non_binary_content_type_prefixes=None,
-    strip_stage_prefix=False
+    wsgi_app,
+    binary_support=None,
+    non_binary_content_type_prefixes=None,
+    strip_stage_prefix=False,
 ):
     """
     Turn a WSGI app callable into a Lambda handler function suitable for
@@ -46,8 +48,10 @@ def make_lambda_handler(
             # Binary support deafults 'off' on version 1
             event_binary_support = binary_support or False
             environ = get_environ_v1(
-                event, context, binary_support=event_binary_support,
-                strip_stage_prefix=strip_stage_prefix
+                event,
+                context,
+                binary_support=event_binary_support,
+                strip_stage_prefix=strip_stage_prefix,
             )
             response = V1Response(
                 binary_support=event_binary_support,
@@ -55,8 +59,12 @@ def make_lambda_handler(
                 multi_value_headers=environ["apig_wsgi.multi_value_headers"],
             )
         elif version == "2.0":
-            environ = get_environ_v2(event, context, binary_support=binary_support,
-                strip_stage_prefix=strip_stage_prefix)
+            environ = get_environ_v2(
+                event,
+                context,
+                binary_support=binary_support,
+                strip_stage_prefix=strip_stage_prefix,
+            )
             response = V2Response(
                 binary_support=True,
                 non_binary_content_type_prefixes=non_binary_content_type_prefixes,
@@ -130,9 +138,9 @@ def get_environ_v1(event, context, binary_support, strip_stage_prefix):
 
     if strip_stage_prefix and "requestContext" in event:
         prefix = f"/{event['requestContext']['stage']}"
-        if environ['PATH_INFO'].startswith(prefix):
-            environ['SCRIPT_NAME'] += prefix
-            environ['PATH_INFO'] = environ['PATH_INFO'][len(prefix):]
+        if environ["PATH_INFO"].startswith(prefix):
+            environ["SCRIPT_NAME"] += prefix
+            environ["PATH_INFO"] = environ["PATH_INFO"][len(prefix) :]
 
     if "requestContext" in event:
         environ["apig_wsgi.request_context"] = event["requestContext"]
@@ -188,9 +196,9 @@ def get_environ_v2(event, context, binary_support, strip_stage_prefix):
 
     if strip_stage_prefix:
         prefix = f"/{event['requestContext']['stage']}"
-        if environ['PATH_INFO'].startswith(prefix):
-            environ['SCRIPT_NAME'] += prefix
-            environ['PATH_INFO'] = environ['PATH_INFO'][len(prefix):]
+        if environ["PATH_INFO"].startswith(prefix):
+            environ["SCRIPT_NAME"] += prefix
+            environ["PATH_INFO"] = environ["PATH_INFO"][len(prefix) :]
 
     environ["apig_wsgi.request_context"] = event["requestContext"]
     environ["apig_wsgi.full_event"] = event

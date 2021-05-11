@@ -539,7 +539,9 @@ class TestV1Events:
 
     def test_strip_stage_prefix(self, simple_app):
 
-        event = make_v1_event(path="/test-stage/", request_context={"stage":"test-stage"})
+        event = make_v1_event(
+            path="/test-stage/", request_context={"stage": "test-stage"}
+        )
 
         simple_app.handler = make_lambda_handler(simple_app, strip_stage_prefix=True)
         simple_app.handler(event, None)
@@ -549,7 +551,9 @@ class TestV1Events:
 
     def test_strip_stage_prefix_unset(self, simple_app):
 
-        event = make_v1_event(path="/test-stage/", request_context={"stage":"test-stage"})
+        event = make_v1_event(
+            path="/test-stage/", request_context={"stage": "test-stage"}
+        )
 
         simple_app.handler = make_lambda_handler(simple_app)
         simple_app.handler(event, None)
@@ -559,7 +563,9 @@ class TestV1Events:
 
     def test_stage_prefix_not_matching(self, simple_app):
 
-        event = make_v1_event(path="/test-stage/", request_context={"stage":"other-stage"})
+        event = make_v1_event(
+            path="/test-stage/", request_context={"stage": "other-stage"}
+        )
 
         simple_app.handler = make_lambda_handler(simple_app, strip_stage_prefix=True)
         simple_app.handler(event, None)
@@ -593,14 +599,17 @@ def make_v2_event(
         "rawQueryString": query_string,
         "headers": headers,
         "cookies": cookies,
-        "requestContext": dict({
-            "http": {
-                "method": method,
-                "path": path,
-                "sourceIp": "1.2.3.4",
-                "protocol": "https",
+        "requestContext": dict(
+            {
+                "http": {
+                    "method": method,
+                    "path": path,
+                    "sourceIp": "1.2.3.4",
+                    "protocol": "https",
+                },
             },
-        }, **(request_context or {})),
+            **(request_context or {}),
+        ),
     }
 
     if binary:
@@ -853,7 +862,9 @@ class TestV2Events:
 
     def test_strip_stage_prefix(self, simple_app):
 
-        event = make_v2_event(path="/test-stage/", request_context={"stage":"test-stage"})
+        event = make_v2_event(
+            path="/test-stage/", request_context={"stage": "test-stage"}
+        )
 
         simple_app.handler = make_lambda_handler(simple_app, strip_stage_prefix=True)
         simple_app.handler(event, None)
@@ -863,7 +874,9 @@ class TestV2Events:
 
     def test_strip_stage_prefix_unset(self, simple_app):
 
-        event = make_v2_event(path="/test-stage/", request_context={"stage":"test-stage"})
+        event = make_v2_event(
+            path="/test-stage/", request_context={"stage": "test-stage"}
+        )
 
         simple_app.handler = make_lambda_handler(simple_app)
         simple_app.handler(event, None)
@@ -873,7 +886,9 @@ class TestV2Events:
 
     def test_stage_prefix_not_matching(self, simple_app):
 
-        event = make_v2_event(path="/test-stage/", request_context={"stage":"other-stage"})
+        event = make_v2_event(
+            path="/test-stage/", request_context={"stage": "other-stage"}
+        )
 
         simple_app.handler = make_lambda_handler(simple_app, strip_stage_prefix=True)
         simple_app.handler(event, None)
