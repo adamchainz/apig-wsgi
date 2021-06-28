@@ -877,16 +877,14 @@ def make_alb_event(
         event["isBase64Encoded"] = False
 
     event["requestContext"] = {
-        "elb": {
-            "targetGroupArn": "arn:aws:elasticloadbalancing:::targetgroup/etc"
-        }
+        "elb": {"targetGroupArn": "arn:aws:elasticloadbalancing:::targetgroup/etc"}
     }
 
     return event
 
 
 class TestAlbEvents:
-    # Query string params from ALB are the same as rawQueryStringParameters 
+    # Query string params from ALB are the same as rawQueryStringParameters
     # in API GW V2... that is they don't need to be encoded.
     def test_querystring_encoding_plus_value(self, simple_app):
         event = make_alb_event(qs_params={"a": ["b+c"]}, qs_params_multi=False)
@@ -933,8 +931,7 @@ class TestAlbEvents:
     def test_querystring_multi_contains_encoded_value(self, simple_app):
         # a = ['foo=bar', '$20', '100%']
         event = make_alb_event(
-            qs_params={"a": ["foo%3Dbar", "%2420", "100%25"]}, 
-            qs_params_multi=True
+            qs_params={"a": ["foo%3Dbar", "%2420", "100%25"]}, qs_params_multi=True
         )
 
         simple_app.handler(event, None)
