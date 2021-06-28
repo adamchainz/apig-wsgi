@@ -876,7 +876,7 @@ def make_alb_event(
         event["body"] = body
         event["isBase64Encoded"] = False
 
-    event["requestContext"]  = {
+    event["requestContext"] = {
         "elb": {
             "targetGroupArn": "arn:aws:elasticloadbalancing:us-east-1:123456789012:targetgroup/apig-Targe-1KFLZWJL6CZBC/0123456789abcdef"
         }
@@ -931,7 +931,9 @@ class TestAlbEvents:
 
     def test_querystring_multi_contains_encoded_value(self, simple_app):
         # a = ['foo=bar', '$20', '100%']
-        event = make_alb_event(qs_params={"a": ["foo%3Dbar", "%2420", "100%25"]}, qs_params_multi=True)
+        event = make_alb_event(
+            qs_params={"a": ["foo%3Dbar", "%2420", "100%25"]}, qs_params_multi=True
+        )
 
         simple_app.handler(event, None)
 

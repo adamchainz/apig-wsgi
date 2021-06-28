@@ -35,6 +35,7 @@ RESERVED_URI_CHARACTERS = [
     "%",
 ]
 
+
 def make_lambda_handler(
     wsgi_app, binary_support=None, non_binary_content_type_prefixes=None
 ):
@@ -62,13 +63,11 @@ def make_lambda_handler(
         version = event.get("version", "1.0")
         if event.get("requestContext") and event["requestContext"].get("elb"):
             version = "alb"
-            
+
         if version == "1.0":
             # Binary support deafults 'off' on version 1
             event_binary_support = binary_support or False
-            environ = get_environ_v1(
-                event, context, encode_query_params=True
-            )
+            environ = get_environ_v1(event, context, encode_query_params=True)
             response = V1Response(
                 binary_support=event_binary_support,
                 non_binary_content_type_prefixes=non_binary_content_type_prefixes,
@@ -82,9 +81,7 @@ def make_lambda_handler(
             )
         elif version == "alb":
             event_binary_support = binary_support or False
-            environ = get_environ_v1(
-                event, context, encode_query_params=False
-            )
+            environ = get_environ_v1(event, context, encode_query_params=False)
             response = V1Response(
                 binary_support=event_binary_support,
                 non_binary_content_type_prefixes=non_binary_content_type_prefixes,

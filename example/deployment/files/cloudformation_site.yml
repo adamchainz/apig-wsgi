@@ -131,8 +131,8 @@ Resources:
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
-      Scheme: internet-facing 
-      Subnets: 
+      Scheme: internet-facing
+      Subnets:
         - !Ref SubnetId1
         - !Ref SubnetId2
       SecurityGroups: [!Ref SecurityGroup]
