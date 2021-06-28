@@ -16,6 +16,15 @@ Parameters:
   LambdaIAMRoleArn:
     Type: String
 
+  VpcId:
+      Type: String
+
+  SubnetId1:
+    Type: String
+
+  SubnetId2:
+    Type: String
+
 Resources:
 
   # Lambda
@@ -33,12 +42,19 @@ Resources:
       Runtime: python3.8
       Timeout: 20
 
-  LambdaPermission:
+  LambdaPermissionAPIGW:
     Type: AWS::Lambda::Permission
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !GetAtt LambdaFunction.Arn
       Principal: apigateway.amazonaws.com
+
+  LambdaPermissionALB:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !GetAtt LambdaFunction.Arn
+      Principal: elasticloadbalancing.amazonaws.com
 
   # new style HTTP API
 
@@ -110,6 +126,49 @@ Resources:
       DeploymentId: !Ref Deployment
       StageName: prod
 
+  # ALB
+
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Scheme: internet-facing
+      Subnets:
+        - !Ref SubnetId1
+        - !Ref SubnetId2
+      SecurityGroups: [!Ref SecurityGroup]
+
+  TargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    DependsOn: LambdaPermissionALB
+    Properties:
+      TargetType: lambda
+      Targets:
+        - Id: !GetAtt LambdaFunction.Arn
+      TargetGroupAttributes:
+        - Key: lambda.multi_value_headers.enabled
+          Value: True
+
+  HttpListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref LoadBalancer
+      Port: 80
+      Protocol: HTTP
+      DefaultActions:
+        - TargetGroupArn: !Ref TargetGroup
+          Type: forward
+
+  SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow http on port 80
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+
 Outputs:
 
   HttpApiUrl:
@@ -117,3 +176,6 @@ Outputs:
 
   RestApiUrl:
     Value: !Sub https://${RestApi}.execute-api.${AWS::Region}.amazonaws.com/${StageApi}/
+
+  AlbUrl:
+    Value: !GetAtt LoadBalancer.DNSName

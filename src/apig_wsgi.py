@@ -13,6 +13,28 @@ DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES = (
     "application/vnd.api+json",
 )
 
+RESERVED_URI_CHARACTERS = [
+    "!",
+    "#",
+    "$",
+    "&",
+    "'",
+    "(",
+    ")",
+    "*",
+    "+",
+    ",",
+    "/",
+    ":",
+    ";",
+    "=",
+    "?",
+    "@",
+    "[",
+    "]",
+    "%",
+]
+
 
 def make_lambda_handler(
     wsgi_app, binary_support=None, non_binary_content_type_prefixes=None
@@ -37,14 +59,15 @@ def make_lambda_handler(
     non_binary_content_type_prefixes = tuple(non_binary_content_type_prefixes)
 
     def handler(event, context):
-        # Assume version 1 since ALB isn't documented as sending a version.
+        # ALB doesn't send a version, but requestContext will contain a key named 'elb'.
         version = event.get("version", "1.0")
+        if event.get("requestContext") and event["requestContext"].get("elb"):
+            version = "alb"
+
         if version == "1.0":
             # Binary support deafults 'off' on version 1
             event_binary_support = binary_support or False
-            environ = get_environ_v1(
-                event, context, binary_support=event_binary_support
-            )
+            environ = get_environ_v1(event, context, encode_query_params=True)
             response = V1Response(
                 binary_support=event_binary_support,
                 non_binary_content_type_prefixes=non_binary_content_type_prefixes,
@@ -56,6 +79,14 @@ def make_lambda_handler(
                 binary_support=True,
                 non_binary_content_type_prefixes=non_binary_content_type_prefixes,
             )
+        elif version == "alb":
+            event_binary_support = binary_support or False
+            environ = get_environ_v1(event, context, encode_query_params=False)
+            response = V1Response(
+                binary_support=event_binary_support,
+                non_binary_content_type_prefixes=non_binary_content_type_prefixes,
+                multi_value_headers=environ["apig_wsgi.multi_value_headers"],
+            )
         else:
             raise ValueError("Unknown version {!r}".format(event["version"]))
         result = wsgi_app(environ, response.start_response)
@@ -65,7 +96,7 @@ def make_lambda_handler(
     return handler
 
 
-def get_environ_v1(event, context, binary_support):
+def get_environ_v1(event, context, encode_query_params):
     body = get_body(event)
     environ = {
         "CONTENT_LENGTH": str(len(body)),
@@ -87,15 +118,24 @@ def get_environ_v1(event, context, binary_support):
         "apig_wsgi.multi_value_headers": False,
     }
 
+    if not encode_query_params:
+        safe_chars = "".join(RESERVED_URI_CHARACTERS)
+    else:
+        safe_chars = ""
+
     # Multi-value query strings need explicit activation on ALB
     if "multiValueQueryStringParameters" in event:
         environ["QUERY_STRING"] = urlencode(
             # may be None when testing on console
             event["multiValueQueryStringParameters"] or (),
             doseq=True,
+            safe=safe_chars,
         )
     else:
-        environ["QUERY_STRING"] = urlencode(event.get("queryStringParameters") or ())
+        environ["QUERY_STRING"] = urlencode(
+            event.get("queryStringParameters") or (),
+            safe=safe_chars,
+        )
 
     # Multi-value headers need explicit activation on ALB
     if "multiValueHeaders" in event:

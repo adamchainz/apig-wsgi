@@ -830,3 +830,110 @@ class TestUnknownVersionEvents:
             simple_app.handler({"version": "distant-future"}, None)
 
         assert str(excinfo.value) == "Unknown version 'distant-future'"
+
+
+# ALB tests
+
+
+def make_alb_event(
+    *,
+    method="GET",
+    path="/",
+    qs_params=None,
+    qs_params_multi=True,
+    headers=None,
+    headers_multi=True,
+    body="",
+    binary=False,
+):
+    if headers is None:
+        headers = {"Host": ["example.com"]}
+
+    event = {
+        "httpMethod": method,
+        "path": path,
+    }
+
+    if qs_params_multi:
+        event["multiValueQueryStringParameters"] = qs_params
+    else:
+        if qs_params is None:
+            event["queryStringParameters"] = None
+        else:
+            event["queryStringParameters"] = {
+                key: values[-1] for key, values in qs_params.items()
+            }
+
+    if headers_multi:
+        event["multiValueHeaders"] = headers
+    else:
+        event["headers"] = {key: values[-1] for key, values in headers.items()}
+
+    if binary:
+        event["body"] = b64encode(body.encode("utf-8"))
+        event["isBase64Encoded"] = True
+    else:
+        event["body"] = body
+        event["isBase64Encoded"] = False
+
+    event["requestContext"] = {
+        "elb": {"targetGroupArn": "arn:aws:elasticloadbalancing:::targetgroup/etc"}
+    }
+
+    return event
+
+
+class TestAlbEvents:
+    # Query string params from ALB are the same as rawQueryStringParameters
+    # in API GW V2... that is they don't need to be encoded.
+    def test_querystring_encoding_plus_value(self, simple_app):
+        event = make_alb_event(qs_params={"a": ["b+c"]}, qs_params_multi=False)
+
+        simple_app.handler(event, None)
+
+        assert simple_app.environ["QUERY_STRING"] == "a=b+c"
+
+    def test_querystring_encoding_plus_key(self, simple_app):
+        event = make_alb_event(qs_params={"a+b": ["c"]}, qs_params_multi=False)
+
+        simple_app.handler(event, None)
+
+        assert simple_app.environ["QUERY_STRING"] == "a+b=c"
+
+    def test_querystring_multi(self, simple_app):
+        event = make_alb_event(qs_params={"foo": ["bar", "baz"]})
+
+        simple_app.handler(event, None)
+
+        assert simple_app.environ["QUERY_STRING"] == "foo=bar&foo=baz"
+
+    def test_querystring_multi_encoding_plus_value(self, simple_app):
+        event = make_alb_event(qs_params={"a": ["b+c", "d"]})
+
+        simple_app.handler(event, None)
+
+        assert simple_app.environ["QUERY_STRING"] == "a=b+c&a=d"
+
+    def test_querystring_multi_encoding_plus_key(self, simple_app):
+        event = make_alb_event(qs_params={"a+b": ["c"]})
+
+        simple_app.handler(event, None)
+
+        assert simple_app.environ["QUERY_STRING"] == "a+b=c"
+
+    def test_querystring_contains_encoded_value(self, simple_app):
+        event = make_alb_event(qs_params={"a": ["foo%3Dbar"]}, qs_params_multi=False)
+
+        simple_app.handler(event, None)
+
+        assert simple_app.environ["QUERY_STRING"] == "a=foo%3Dbar"
+
+    def test_querystring_multi_contains_encoded_value(self, simple_app):
+        # a = ['foo=bar', '$20', '100%']
+        event = make_alb_event(
+            qs_params={"a": ["foo%3Dbar", "%2420", "100%25"]}, qs_params_multi=True
+        )
+
+        simple_app.handler(event, None)
+
+        assert simple_app.environ["QUERY_STRING"] == "a=foo%3Dbar&a=%2420&a=100%25"
