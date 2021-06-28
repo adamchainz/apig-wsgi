@@ -47,7 +47,13 @@ other requirements into it, and run the deployment playbook:
    source venv/bin/activate
    python -m pip install -U pip wheel
    python -m pip install -r requirements.txt
-   ansible-playbook playbook.yml
+
+To run the playbook, you'll need to specify a VPC ID and two subnet IDs in order
+to create an ALB.
+
+.. code-block:: sh
+
+   ansible-playbook playbook.yml -e "vpc_id=vpc-12345678" -e "subnet_id_1=subnet-12345678" -e "subnet_id_2=subnet-12345678"
 
 Ansible should complete with a ``PLAY RECAP`` at the end like:
 
