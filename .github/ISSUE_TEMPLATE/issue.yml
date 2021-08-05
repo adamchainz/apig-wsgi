@@ -6,7 +6,7 @@ body:
   attributes:
     label: Python Version
     description: Which version of Python were you using?
-    placeholder: 1.0.0
+    placeholder: 3.9.0
   validations:
     required: false
 - type: input
@@ -14,7 +14,7 @@ body:
   attributes:
     label: Package Version
     description: Which version of this package were you using? If not the latest version, please check this issue has not since been resolved.
-    placeholder: 3.9.0
+    placeholder: 1.0.0
   validations:
     required: false
 - type: textarea
