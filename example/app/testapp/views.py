@@ -34,6 +34,21 @@ def index(request):
             <pre>{escape(full_event)}</pre>
             <h2>WSGI Environ</h2>
             <pre>{escape(environ)}</pre>
+            <h2>Cookies</h2>
+            <ul>
+                <li>
+                  testcookie:
+                  <pre>{escape(repr(request.COOKIES.get('testcookie')))}</pre>
+                </li>
+                <li>
+                  testcookie2:
+                  <pre>{escape(repr(request.COOKIES.get('testcookie2')))}</pre>
+                </li>
+                <li>
+                  testcookie3:
+                  <pre>{escape(repr(request.COOKIES.get('testcookie3')))}</pre>
+                </li>
+            </ul>
           </body>
         </html>
         """
@@ -43,6 +58,11 @@ def index(request):
     )
     response.set_cookie(
         "testcookie2", str(random.randint(0, 1_000_000)), samesite="strict"
+    )
+    response.set_cookie(
+        "testcookie3",
+        'escaped double quote \\" escaped comma \\054',
+        samesite="strict",
     )
     return response
 
