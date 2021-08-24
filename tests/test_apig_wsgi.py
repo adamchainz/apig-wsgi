@@ -542,50 +542,18 @@ class TestV1Events:
 # ALB tests
 
 
-def make_alb_event(
-    *,
-    method="GET",
-    path="/",
-    qs_params=None,
-    qs_params_multi=True,
-    headers=None,
-    headers_multi=True,
-    body="",
-    binary=False,
-):
-    if headers is None:
-        headers = {"Host": ["example.com"]}
-
-    event = {
-        "httpMethod": method,
-        "path": path,
+def make_alb_event(*args, request_context=None, **kwargs):
+    if request_context is None:
+        request_context = {}
+    request_context["elb"] = {
+        "targetGroupArn": "arn:aws:elasticloadbalancing:::targetgroup/etc"
     }
 
-    if qs_params_multi:
-        event["multiValueQueryStringParameters"] = qs_params
-    else:
-        if qs_params is None:
-            event["queryStringParameters"] = None
-        else:
-            event["queryStringParameters"] = {
-                key: values[-1] for key, values in qs_params.items()
-            }
+    event = make_v1_event(*args, request_context=request_context, **kwargs)
 
-    if headers_multi:
-        event["multiValueHeaders"] = headers
-    else:
-        event["headers"] = {key: values[-1] for key, values in headers.items()}
-
-    if binary:
-        event["body"] = b64encode(body.encode("utf-8"))
-        event["isBase64Encoded"] = True
-    else:
-        event["body"] = body
+    del event["version"]
+    if "isBase64Encoded" not in event:
         event["isBase64Encoded"] = False
-
-    event["requestContext"] = {
-        "elb": {"targetGroupArn": "arn:aws:elasticloadbalancing:::targetgroup/etc"}
-    }
 
     return event
 
