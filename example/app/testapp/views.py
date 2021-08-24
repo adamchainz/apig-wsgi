@@ -3,12 +3,12 @@ from html import escape
 from pathlib import Path
 from pprint import pformat
 
-from django.http import HttpResponse
+from django.http import HttpRequest, HttpResponse
 
 MODULE_DIR = Path(__file__).resolve(strict=True).parent
 
 
-def index(request):
+def index(request: HttpRequest) -> HttpResponse:
     headers = pformat(dict(request.headers))
     params = pformat(dict(request.GET))
     request_context = pformat(request.environ.get("apig_wsgi.request_context", None))
@@ -47,7 +47,7 @@ def index(request):
     return response
 
 
-def favicon(request):
+def favicon(request: HttpRequest) -> HttpResponse:
     return HttpResponse(
         (MODULE_DIR / "favicon.ico").read_bytes(),
         content_type="image/x-icon",
