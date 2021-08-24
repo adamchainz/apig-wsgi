@@ -106,6 +106,7 @@ def make_v1_event(
         event["isBase64Encoded"] = True
     else:
         event["body"] = body
+        event["isBase64Encoded"] = False
 
     if request_context is not None:
         event["requestContext"] = request_context
