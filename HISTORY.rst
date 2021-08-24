@@ -7,6 +7,8 @@ History
   Thanks to Jason Capriotti for the fix in
   `PR #254 <https://github.com/adamchainz/apig-wsgi/pull/254>`__.
 
+* Add type hints.
+
 2.11.0 (2021-05-10)
 -------------------
 

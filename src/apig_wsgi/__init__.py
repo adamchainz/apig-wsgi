@@ -3,11 +3,13 @@ import urllib
 from base64 import b64decode, b64encode
 from collections import defaultdict
 from io import BytesIO
+from types import TracebackType
+from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
 from urllib.parse import urlencode
 
 __all__ = ("make_lambda_handler",)
 
-DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES = (
+DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES: Tuple[str, ...] = (
     "text/",
     "application/json",
     "application/vnd.api+json",
@@ -15,10 +17,25 @@ DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES = (
 
 RESERVED_URI_CHARACTERS = r"!#$&'()*+,/:;=?@[]%"
 
+_ExcInfoType = Union[
+    None,
+    Tuple[Type[BaseException], BaseException, TracebackType],
+    Tuple[None, None, None],
+]
+_WsgiAppType = Callable[
+    [
+        Dict[str, Any],
+        Callable[[str, List[Tuple[str, str]], _ExcInfoType], Callable[[bytes], Any]],
+    ],
+    Iterable[bytes],
+]
+
 
 def make_lambda_handler(
-    wsgi_app, binary_support=None, non_binary_content_type_prefixes=None
-):
+    wsgi_app: _WsgiAppType,
+    binary_support: Optional[bool] = None,
+    non_binary_content_type_prefixes: Optional[Iterable[str]] = None,
+) -> Callable[[Dict[str, Any], Any], Dict[str, Any]]:
     """
     Turn a WSGI app callable into a Lambda handler function suitable for
     running on API Gateway.
@@ -35,10 +52,11 @@ def make_lambda_handler(
         non-binary responses as binary.
     """
     if non_binary_content_type_prefixes is None:
-        non_binary_content_type_prefixes = DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES
-    non_binary_content_type_prefixes = tuple(non_binary_content_type_prefixes)
+        non_binary_prefixes_tuple = DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES
+    else:
+        non_binary_prefixes_tuple = tuple(non_binary_content_type_prefixes)
 
-    def handler(event, context):
+    def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # ALB doesn't send a version, but requestContext will contain a key named 'elb'.
         if "requestContext" in event and "elb" in event["requestContext"]:
             version = "alb"
@@ -53,16 +71,18 @@ def make_lambda_handler(
                 context,
                 encode_query_params=(version == "1.0"),
             )
-            response = V1Response(
+            response: BaseResponse = V1Response(
                 binary_support=event_binary_support,
-                non_binary_content_type_prefixes=non_binary_content_type_prefixes,
+                non_binary_content_type_prefixes=non_binary_prefixes_tuple,
                 multi_value_headers=environ["apig_wsgi.multi_value_headers"],
             )
         elif version == "2.0":
-            environ = get_environ_v2(event, context, binary_support=binary_support)
+            environ = get_environ_v2(
+                event, context, binary_support=bool(binary_support)
+            )
             response = V2Response(
                 binary_support=True,
-                non_binary_content_type_prefixes=non_binary_content_type_prefixes,
+                non_binary_content_type_prefixes=non_binary_prefixes_tuple,
             )
         else:
             raise ValueError("Unknown version {!r}".format(event["version"]))
@@ -73,9 +93,11 @@ def make_lambda_handler(
     return handler
 
 
-def get_environ_v1(event, context, encode_query_params):
+def get_environ_v1(
+    event: Dict[str, Any], context: Any, encode_query_params: bool
+) -> Dict[str, Any]:
     body = get_body(event)
-    environ = {
+    environ: Dict[str, Any] = {
         "CONTENT_LENGTH": str(len(body)),
         "HTTP": "on",
         "PATH_INFO": urllib.parse.unquote(event["path"], encoding="iso-8859-1"),
@@ -148,12 +170,14 @@ def get_environ_v1(event, context, encode_query_params):
     return environ
 
 
-def get_environ_v2(event, context, binary_support):
+def get_environ_v2(
+    event: Dict[str, Any], context: Any, binary_support: bool
+) -> Dict[str, Any]:
     body = get_body(event)
     headers = event["headers"]
     http = event["requestContext"]["http"]
 
-    environ = {
+    environ: Dict[str, Any] = {
         "CONTENT_LENGTH": str(len(body)),
         "HTTP": "on",
         "HTTP_COOKIE": ";".join(event.get("cookies", ())),
@@ -199,29 +223,39 @@ def get_environ_v2(event, context, binary_support):
     return environ
 
 
-def get_body(event):
-    body = event.get("body", "") or ""
+def get_body(event: Dict[str, Any]) -> bytes:
+    body: str = event.get("body", "") or ""
     if event.get("isBase64Encoded", False):
         return b64decode(body)
-    return body.encode("utf-8")
+    return body.encode()
 
 
 class BaseResponse:
-    def __init__(self, *, binary_support, non_binary_content_type_prefixes):
+    def __init__(
+        self,
+        *,
+        binary_support: bool,
+        non_binary_content_type_prefixes: Tuple[str, ...],
+    ) -> None:
         self.status_code = 500
-        self.headers = []
+        self.headers: List[Tuple[str, str]] = []
         self.body = BytesIO()
         self.binary_support = binary_support
         self.non_binary_content_type_prefixes = non_binary_content_type_prefixes
 
-    def start_response(self, status, response_headers, exc_info=None):
-        if exc_info is not None:
+    def start_response(
+        self,
+        status: str,
+        response_headers: List[Tuple[str, str]],
+        exc_info: Optional[_ExcInfoType] = None,
+    ) -> Callable[[bytes], int]:
+        if exc_info is not None and exc_info[0] is not None:
             raise exc_info[0](exc_info[1]).with_traceback(exc_info[2])
         self.status_code = int(status.split()[0])
         self.headers.extend(response_headers)
         return self.body.write
 
-    def consume(self, result):
+    def consume(self, result: Iterable[bytes]) -> None:
         try:
             for data in result:
                 if data:
@@ -231,7 +265,7 @@ class BaseResponse:
             if close:
                 close()
 
-    def _should_send_binary(self):
+    def _should_send_binary(self) -> bool:
         """
         Determines if binary response should be sent to API Gateway
         """
@@ -246,31 +280,35 @@ class BaseResponse:
         # Content type is non-binary but the content encoding might be.
         return "gzip" in content_encoding.lower()
 
-    def _get_content_type(self):
+    def _get_content_type(self) -> str:
         return self._get_header("content-type") or ""
 
-    def _get_content_encoding(self):
+    def _get_content_encoding(self) -> str:
         return self._get_header("content-encoding") or ""
 
-    def _get_header(self, header_name):
+    def _get_header(self, header_name: str) -> Optional[str]:
         header_name = header_name.lower()
         matching_headers = [v for k, v in self.headers if k.lower() == header_name]
         if len(matching_headers):
             return matching_headers[-1]
         return None
 
+    def as_apig_response(self) -> Dict[str, Any]:  # pragma: no cover
+        raise NotImplementedError("Need to use subclass")
+
 
 class V1Response(BaseResponse):
-    def __init__(self, *, multi_value_headers, **kwargs):
+    def __init__(self, *, multi_value_headers: bool, **kwargs: Any) -> None:
         super().__init__(**kwargs)
         self.multi_value_headers = multi_value_headers
 
-    def as_apig_response(self):
-        response = {"statusCode": self.status_code}
+    def as_apig_response(self) -> Dict[str, Any]:
+        response: Dict[str, Any] = {"statusCode": self.status_code}
         # Return multiValueHeaders as header if support is required
         if self.multi_value_headers:
             headers = defaultdict(list)
-            [headers[k].append(v) for k, v in self.headers]
+            for k, v in self.headers:
+                headers[k].append(v)
             response["multiValueHeaders"] = dict(headers)
         else:
             response["headers"] = dict(self.headers)
@@ -286,8 +324,8 @@ class V1Response(BaseResponse):
 
 
 class V2Response(BaseResponse):
-    def as_apig_response(self):
-        response = {
+    def as_apig_response(self) -> Dict[str, Any]:
+        response: Dict[str, Any] = {
             "statusCode": self.status_code,
         }
 

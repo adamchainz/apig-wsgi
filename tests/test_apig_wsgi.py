@@ -1,24 +1,44 @@
 import sys
 from base64 import b64encode
 from io import BytesIO
+from typing import Any, Callable, Dict, Generator, Iterable, List, Optional, Tuple
 
 import pytest
 
-from apig_wsgi import make_lambda_handler
+from apig_wsgi import _ExcInfoType, make_lambda_handler
+
+
+class App:
+    def __init__(
+        self,
+        headers: List[Tuple[str, str]],
+        response: bytes,
+        exc_info: _ExcInfoType,
+    ) -> None:
+        self.headers = headers
+        self.response = response
+        self.exc_info = exc_info
+        self.handler = make_lambda_handler(self)
+
+    def __call__(
+        self,
+        environ: Dict[str, Any],
+        start_response: Callable[
+            [str, List[Tuple[str, str]], _ExcInfoType], Callable[[bytes], Any]
+        ],
+    ) -> Iterable[bytes]:
+        self.environ = environ
+        start_response("200 OK", self.headers, self.exc_info)
+        return BytesIO(self.response)
 
 
 @pytest.fixture()
-def simple_app():
-    def app(environ, start_response):
-        app.environ = environ
-        start_response("200 OK", app.headers, app.exc_info)
-        return BytesIO(app.response)
-
-    app.headers = [("Content-Type", "text/plain")]
-    app.response = b"Hello World\n"
-    app.handler = make_lambda_handler(app)
-    app.exc_info = None
-    yield app
+def simple_app() -> Generator[App, None, None]:
+    yield App(
+        headers=[("Content-Type", "text/plain")],
+        response=b"Hello World\n",
+        exc_info=None,
+    )
 
 
 parametrize_default_text_content_type = pytest.mark.parametrize(
@@ -35,19 +55,21 @@ parametrize_custom_text_content_type = pytest.mark.parametrize(
 
 
 class ContextStub:
+    """
+    Stub for context object as documented at
+    https://docs.aws.amazon.com/lambda/latest/dg/python-context.html
+    """
+
     def __init__(
         self,
-        function_name="app",
-        function_version="$LATEST",
-        invoked_function_arn="arn:test:lambda:us-east-1:0123456789:function:app",
-        memory_limit_in_mb=128,
-        aws_request_id=None,
-        log_stream_name="app-group",
-        log_group_name="app-stream",
-        identity=None,
-        client_context=None,
-        remaining_time_in_millis=60,
-    ):
+        function_name: str = "app",
+        function_version: str = "$LATEST",
+        invoked_function_arn: str = "arn:test:lambda:us-east-1:0123456789:function:app",
+        memory_limit_in_mb: int = 128,
+        aws_request_id: Optional[str] = None,
+        log_stream_name: str = "app-group",
+        log_group_name: str = "app-stream",
+    ) -> None:
         self.function_name = function_name
         self.function_version = function_version
         self.invoked_function_arn = invoked_function_arn
@@ -55,11 +77,6 @@ class ContextStub:
         self.aws_request_id = aws_request_id
         self.log_group_name = log_group_name
         self.log_stream_name = log_stream_name
-        if identity:
-            self.identity = identity
-        if client_context:
-            self.client_context = client_context
-        self._remaining_time_in_millis = remaining_time_in_millis
 
 
 # v1 tests
@@ -67,20 +84,20 @@ class ContextStub:
 
 def make_v1_event(
     *,
-    method="GET",
-    path="/",
-    qs_params=None,
-    qs_params_multi=True,
-    headers=None,
-    headers_multi=True,
-    body="",
-    binary=False,
-    request_context=None,
-):
+    method: str = "GET",
+    path: str = "/",
+    qs_params: Optional[Dict[str, List[str]]] = None,
+    qs_params_multi: bool = True,
+    headers: Optional[Dict[str, List[str]]] = None,
+    headers_multi: bool = True,
+    body: str = "",
+    binary: bool = False,
+    request_context: Optional[Dict[str, Any]] = None,
+) -> Dict[str, Any]:
     if headers is None:
         headers = {"Host": ["example.com"]}
 
-    event = {
+    event: Dict[str, Any] = {
         "version": "1.0",
         "httpMethod": method,
         "path": path,
@@ -115,7 +132,7 @@ def make_v1_event(
 
 
 class TestV1Events:
-    def test_get(self, simple_app):
+    def test_get(self, simple_app: App) -> None:
         response = simple_app.handler(make_v1_event(), None)
 
         assert response == {
@@ -125,7 +142,7 @@ class TestV1Events:
             "body": "Hello World\n",
         }
 
-    def test_get_missing_content_type(self, simple_app):
+    def test_get_missing_content_type(self, simple_app: App) -> None:
         simple_app.headers = []
 
         response = simple_app.handler(make_v1_event(), None)
@@ -137,7 +154,7 @@ class TestV1Events:
             "body": "Hello World\n",
         }
 
-    def test_get_single_header(self, simple_app):
+    def test_get_single_header(self, simple_app: App) -> None:
         response = simple_app.handler(make_v1_event(headers_multi=False), None)
 
         assert response == {
@@ -149,8 +166,8 @@ class TestV1Events:
 
     @parametrize_default_text_content_type
     def test_get_binary_support_default_text_content_types(
-        self, simple_app, text_content_type
-    ):
+        self, simple_app: App, text_content_type: str
+    ) -> None:
         simple_app.handler = make_lambda_handler(simple_app, binary_support=True)
         simple_app.headers = [("Content-Type", text_content_type)]
 
@@ -164,8 +181,8 @@ class TestV1Events:
 
     @parametrize_custom_text_content_type
     def test_get_binary_support_custom_text_content_types(
-        self, simple_app, text_content_type
-    ):
+        self, simple_app: App, text_content_type: str
+    ) -> None:
         simple_app.handler = make_lambda_handler(
             simple_app,
             binary_support=True,
@@ -181,7 +198,7 @@ class TestV1Events:
             "body": "Hello World\n",
         }
 
-    def test_get_binary_support_binary(self, simple_app):
+    def test_get_binary_support_binary(self, simple_app: App) -> None:
         simple_app.handler = make_lambda_handler(simple_app, binary_support=True)
         simple_app.headers = [("Content-Type", "application/octet-stream")]
         simple_app.response = b"\x13\x37"
@@ -197,8 +214,8 @@ class TestV1Events:
 
     @parametrize_default_text_content_type
     def test_get_binary_support_binary_default_text_with_gzip_content_encoding(
-        self, simple_app, text_content_type
-    ):
+        self, simple_app: App, text_content_type: str
+    ) -> None:
         simple_app.handler = make_lambda_handler(simple_app, binary_support=True)
         simple_app.headers = [
             ("Content-Type", text_content_type),
@@ -220,8 +237,8 @@ class TestV1Events:
 
     @parametrize_custom_text_content_type
     def test_get_binary_support_binary_custom_text_with_gzip_content_encoding(
-        self, simple_app, text_content_type
-    ):
+        self, simple_app: App, text_content_type: str
+    ) -> None:
         simple_app.handler = make_lambda_handler(
             simple_app,
             binary_support=True,
@@ -245,7 +262,7 @@ class TestV1Events:
             "body": b64encode(b"\x13\x37").decode("utf-8"),
         }
 
-    def test_get_binary_support_no_content_type(self, simple_app):
+    def test_get_binary_support_no_content_type(self, simple_app: App) -> None:
         simple_app.handler = make_lambda_handler(simple_app, binary_support=True)
         simple_app.headers = []
         simple_app.response = b"\x13\x37"
@@ -259,7 +276,7 @@ class TestV1Events:
             "body": b64encode(b"\x13\x37").decode("utf-8"),
         }
 
-    def test_post(self, simple_app):
+    def test_post(self, simple_app: App) -> None:
         event = make_v1_event(method="POST", body="The World is Large")
 
         response = simple_app.handler(event, None)
@@ -273,7 +290,7 @@ class TestV1Events:
             "body": "Hello World\n",
         }
 
-    def test_post_binary_support(self, simple_app):
+    def test_post_binary_support(self, simple_app: App) -> None:
         simple_app.handler = make_lambda_handler(simple_app)
         event = make_v1_event(method="POST", body="dogfood", binary=True)
 
@@ -288,112 +305,112 @@ class TestV1Events:
             "body": "Hello World\n",
         }
 
-    def test_path_unquoting(self, simple_app):
+    def test_path_unquoting(self, simple_app: App) -> None:
         event = make_v1_event(path="/api/path%2Finfo")
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["PATH_INFO"] == "/api/path/info"
 
-    def test_querystring_none(self, simple_app):
+    def test_querystring_none(self, simple_app: App) -> None:
         event = make_v1_event()
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["QUERY_STRING"] == ""
 
-    def test_querystring_none_single(self, simple_app):
+    def test_querystring_none_single(self, simple_app: App) -> None:
         event = make_v1_event(qs_params_multi=False)
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["QUERY_STRING"] == ""
 
-    def test_querystring_empty(self, simple_app):
+    def test_querystring_empty(self, simple_app: App) -> None:
         event = make_v1_event(qs_params={})
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["QUERY_STRING"] == ""
 
-    def test_querystring_empty_single(self, simple_app):
+    def test_querystring_empty_single(self, simple_app: App) -> None:
         event = make_v1_event(qs_params={}, qs_params_multi=False)
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["QUERY_STRING"] == ""
 
-    def test_querystring_one(self, simple_app):
+    def test_querystring_one(self, simple_app: App) -> None:
         event = make_v1_event(qs_params={"foo": ["bar"]})
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["QUERY_STRING"] == "foo=bar"
 
-    def test_querystring_one_single(self, simple_app):
+    def test_querystring_one_single(self, simple_app: App) -> None:
         event = make_v1_event(qs_params={"foo": ["bar"]}, qs_params_multi=False)
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["QUERY_STRING"] == "foo=bar"
 
-    def test_querystring_encoding_plus_value(self, simple_app):
+    def test_querystring_encoding_plus_value(self, simple_app: App) -> None:
         event = make_v1_event(qs_params={"a": ["b+c"]}, qs_params_multi=False)
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["QUERY_STRING"] == "a=b%2Bc"
 
-    def test_querystring_encoding_plus_key(self, simple_app):
+    def test_querystring_encoding_plus_key(self, simple_app: App) -> None:
         event = make_v1_event(qs_params={"a+b": ["c"]}, qs_params_multi=False)
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["QUERY_STRING"] == "a%2Bb=c"
 
-    def test_querystring_multi(self, simple_app):
+    def test_querystring_multi(self, simple_app: App) -> None:
         event = make_v1_event(qs_params={"foo": ["bar", "baz"]})
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["QUERY_STRING"] == "foo=bar&foo=baz"
 
-    def test_querystring_multi_encoding_plus_value(self, simple_app):
+    def test_querystring_multi_encoding_plus_value(self, simple_app: App) -> None:
         event = make_v1_event(qs_params={"a": ["b+c", "d"]})
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["QUERY_STRING"] == "a=b%2Bc&a=d"
 
-    def test_querystring_multi_encoding_plus_key(self, simple_app):
+    def test_querystring_multi_encoding_plus_key(self, simple_app: App) -> None:
         event = make_v1_event(qs_params={"a+b": ["c"]})
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["QUERY_STRING"] == "a%2Bb=c"
 
-    def test_plain_header(self, simple_app):
+    def test_plain_header(self, simple_app: App) -> None:
         event = make_v1_event(headers={"Test-Header": ["foobar"]})
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["HTTP_TEST_HEADER"] == "foobar"
 
-    def test_plain_header_single(self, simple_app):
+    def test_plain_header_single(self, simple_app: App) -> None:
         event = make_v1_event(headers={"Test-Header": ["foobar"]}, headers_multi=False)
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["HTTP_TEST_HEADER"] == "foobar"
 
-    def test_plain_header_multi(self, simple_app):
+    def test_plain_header_multi(self, simple_app: App) -> None:
         event = make_v1_event(headers={"Test-Header": ["foo", "bar"]})
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["HTTP_TEST_HEADER"] == "foo,bar"
 
-    def test_special_headers(self, simple_app):
+    def test_special_headers(self, simple_app: App) -> None:
         event = make_v1_event(
             headers={
                 "Content-Type": ["text/plain"],
@@ -417,7 +434,7 @@ class TestV1Events:
         assert simple_app.environ["SERVER_PORT"] == "123"
         assert simple_app.environ["HTTP_X_FORWARDED_PORT"] == "123"
 
-    def test_special_content_type(self, simple_app):
+    def test_special_content_type(self, simple_app: App) -> None:
         event = make_v1_event(headers={"Content-Type": ["text/plain"]})
 
         simple_app.handler(event, None)
@@ -425,7 +442,7 @@ class TestV1Events:
         assert simple_app.environ["CONTENT_TYPE"] == "text/plain"
         assert simple_app.environ["HTTP_CONTENT_TYPE"] == "text/plain"
 
-    def test_special_host(self, simple_app):
+    def test_special_host(self, simple_app: App) -> None:
         event = make_v1_event(headers={"Host": ["example.com"]})
 
         simple_app.handler(event, None)
@@ -433,7 +450,7 @@ class TestV1Events:
         assert simple_app.environ["SERVER_NAME"] == "example.com"
         assert simple_app.environ["HTTP_HOST"] == "example.com"
 
-    def test_special_x_forwarded_for(self, simple_app):
+    def test_special_x_forwarded_for(self, simple_app: App) -> None:
         event = make_v1_event(headers={"X-Forwarded-For": ["1.2.3.4, 5.6.7.8"]})
 
         simple_app.handler(event, None)
@@ -441,7 +458,7 @@ class TestV1Events:
         assert simple_app.environ["REMOTE_ADDR"] == "1.2.3.4"
         assert simple_app.environ["HTTP_X_FORWARDED_FOR"] == "1.2.3.4, 5.6.7.8"
 
-    def test_x_forwarded_proto(self, simple_app):
+    def test_x_forwarded_proto(self, simple_app: App) -> None:
         event = make_v1_event(headers={"X-Forwarded-Proto": ["https"]})
 
         simple_app.handler(event, None)
@@ -449,7 +466,7 @@ class TestV1Events:
         assert simple_app.environ["wsgi.url_scheme"] == "https"
         assert simple_app.environ["HTTP_X_FORWARDED_PROTO"] == "https"
 
-    def test_x_forwarded_port(self, simple_app):
+    def test_x_forwarded_port(self, simple_app: App) -> None:
         event = make_v1_event(headers={"X-Forwarded-Port": ["123"]})
 
         simple_app.handler(event, None)
@@ -457,21 +474,21 @@ class TestV1Events:
         assert simple_app.environ["SERVER_PORT"] == "123"
         assert simple_app.environ["HTTP_X_FORWARDED_PORT"] == "123"
 
-    def test_no_headers(self, simple_app):
+    def test_no_headers(self, simple_app: App) -> None:
         # allow headers to be missing from event
         event = make_v1_event()
         del event["multiValueHeaders"]
 
         simple_app.handler(event, None)
 
-    def test_headers_None(self, simple_app):
+    def test_headers_None(self, simple_app: App) -> None:
         # allow headers to be 'None' from APIG test console
         event = make_v1_event()
         event["multiValueHeaders"] = None
 
         simple_app.handler(event, None)
 
-    def test_exc_info(self, simple_app):
+    def test_exc_info(self, simple_app: App) -> None:
         try:
             raise ValueError("Example exception")
         except ValueError:
@@ -482,7 +499,7 @@ class TestV1Events:
 
         assert str(excinfo.value) == "Example exception"
 
-    def test_request_context(self, simple_app):
+    def test_request_context(self, simple_app: App) -> None:
         context = {"authorizer": {"user": "test@example.com"}}
         event = make_v1_event(request_context=context)
 
@@ -490,14 +507,14 @@ class TestV1Events:
 
         assert simple_app.environ["apig_wsgi.request_context"] == context
 
-    def test_full_event(self, simple_app):
+    def test_full_event(self, simple_app: App) -> None:
         event = make_v1_event()
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["apig_wsgi.full_event"] == event
 
-    def test_elb_health_check(self, simple_app):
+    def test_elb_health_check(self, simple_app: App) -> None:
         """
         Check compatibility with health check events as per:
         https://docs.aws.amazon.com/elasticloadbalancing/latest/application/lambda-functions.html#enable-health-checks-lambda  # noqa: B950
@@ -519,14 +536,14 @@ class TestV1Events:
         assert environ["SERVER_PORT"] == ""
         assert environ["wsgi.url_scheme"] == "http"
 
-    def test_context(self, simple_app):
+    def test_context(self, simple_app: App) -> None:
         context = ContextStub(aws_request_id="test-request-id")
 
         simple_app.handler(make_v1_event(), context)
 
         assert simple_app.environ["apig_wsgi.context"] == context
 
-    def test_empty_and_uncloseable_content(self):
+    def test_empty_and_uncloseable_content(self) -> None:
         def app(environ, start_response):
             start_response("200 OK", [], None)
             return [b"Hi", b"", b" there!", b""]
@@ -542,14 +559,13 @@ class TestV1Events:
 # ALB tests
 
 
-def make_alb_event(*args, request_context=None, **kwargs):
-    if request_context is None:
-        request_context = {}
-    request_context["elb"] = {
-        "targetGroupArn": "arn:aws:elasticloadbalancing:::targetgroup/etc"
-    }
-
-    event = make_v1_event(*args, request_context=request_context, **kwargs)
+def make_alb_event(**kwargs: Any) -> Dict[str, Any]:
+    event = make_v1_event(
+        request_context={
+            "elb": {"targetGroupArn": "arn:aws:elasticloadbalancing:::targetgroup/etc"}
+        },
+        **kwargs,
+    )
 
     del event["version"]
     if "isBase64Encoded" not in event:
@@ -561,49 +577,49 @@ def make_alb_event(*args, request_context=None, **kwargs):
 class TestAlbEvents:
     # Query string params from ALB are the same as rawQueryStringParameters
     # in API GW V2... that is they don't need to be encoded.
-    def test_querystring_encoding_plus_value(self, simple_app):
+    def test_querystring_encoding_plus_value(self, simple_app: App) -> None:
         event = make_alb_event(qs_params={"a": ["b+c"]}, qs_params_multi=False)
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["QUERY_STRING"] == "a=b+c"
 
-    def test_querystring_encoding_plus_key(self, simple_app):
+    def test_querystring_encoding_plus_key(self, simple_app: App) -> None:
         event = make_alb_event(qs_params={"a+b": ["c"]}, qs_params_multi=False)
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["QUERY_STRING"] == "a+b=c"
 
-    def test_querystring_multi(self, simple_app):
+    def test_querystring_multi(self, simple_app: App) -> None:
         event = make_alb_event(qs_params={"foo": ["bar", "baz"]})
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["QUERY_STRING"] == "foo=bar&foo=baz"
 
-    def test_querystring_multi_encoding_plus_value(self, simple_app):
+    def test_querystring_multi_encoding_plus_value(self, simple_app: App) -> None:
         event = make_alb_event(qs_params={"a": ["b+c", "d"]})
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["QUERY_STRING"] == "a=b+c&a=d"
 
-    def test_querystring_multi_encoding_plus_key(self, simple_app):
+    def test_querystring_multi_encoding_plus_key(self, simple_app: App) -> None:
         event = make_alb_event(qs_params={"a+b": ["c"]})
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["QUERY_STRING"] == "a+b=c"
 
-    def test_querystring_contains_encoded_value(self, simple_app):
+    def test_querystring_contains_encoded_value(self, simple_app: App) -> None:
         event = make_alb_event(qs_params={"a": ["foo%3Dbar"]}, qs_params_multi=False)
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["QUERY_STRING"] == "a=foo%3Dbar"
 
-    def test_querystring_multi_contains_encoded_value(self, simple_app):
+    def test_querystring_multi_contains_encoded_value(self, simple_app: App) -> None:
         # a = ['foo=bar', '$20', '100%']
         event = make_alb_event(
             qs_params={"a": ["foo%3Dbar", "%2420", "100%25"]}, qs_params_multi=True
@@ -619,21 +635,21 @@ class TestAlbEvents:
 
 def make_v2_event(
     *,
-    host="example.com",
-    method="GET",
-    path="/",
-    query_string=None,
-    cookies=None,
-    headers=None,
-    body="",
-    binary=False,
-):
+    host: str = "example.com",
+    method: str = "GET",
+    path: str = "/",
+    query_string: Optional[str] = None,
+    cookies: Optional[List[str]] = None,
+    headers: Optional[Dict[str, str]] = None,
+    body: str = "",
+    binary: bool = False,
+) -> Dict[str, Any]:
     if cookies is None:
         cookies = []
     if headers is None:
         headers = {"Host": "example.com"}
 
-    event = {
+    event: Dict[str, Any] = {
         "version": "2.0",
         "rawQueryString": query_string,
         "headers": headers,
@@ -649,7 +665,7 @@ def make_v2_event(
     }
 
     if binary:
-        event["body"] = b64encode(body.encode("utf-8"))
+        event["body"] = b64encode(body.encode())
         event["isBase64Encoded"] = True
     else:
         event["body"] = body
@@ -659,7 +675,7 @@ def make_v2_event(
 
 
 class TestV2Events:
-    def test_get(self, simple_app):
+    def test_get(self, simple_app: App) -> None:
         response = simple_app.handler(make_v2_event(), None)
 
         assert response == {
@@ -670,7 +686,7 @@ class TestV2Events:
             "body": "Hello World\n",
         }
 
-    def test_get_missing_content_type(self, simple_app):
+    def test_get_missing_content_type(self, simple_app: App) -> None:
         simple_app.headers = []
 
         response = simple_app.handler(make_v2_event(), None)
@@ -683,19 +699,19 @@ class TestV2Events:
             "body": "SGVsbG8gV29ybGQK",
         }
 
-    def test_cookie(self, simple_app):
+    def test_cookie(self, simple_app: App) -> None:
         simple_app.handler(make_v2_event(cookies=["testcookie=abc"]), None)
 
         assert simple_app.environ["HTTP_COOKIE"] == "testcookie=abc"
 
-    def test_two_cookies(self, simple_app):
+    def test_two_cookies(self, simple_app: App) -> None:
         simple_app.handler(
             make_v2_event(cookies=["testcookie=abc", "testcookie2=def"]), None
         )
 
         assert simple_app.environ["HTTP_COOKIE"] == "testcookie=abc;testcookie2=def"
 
-    def test_mixed_cookies(self, simple_app):
+    def test_mixed_cookies(self, simple_app: App) -> None:
         """
         Check that if, somehow, API Gateway leaves a cookie as a "cookie"
         header, we combine that with the 'cookies' key. The API Gateway
@@ -712,7 +728,7 @@ class TestV2Events:
 
         assert simple_app.environ["HTTP_COOKIE"] == "testcookie=abc;testcookie2=def"
 
-    def test_set_one_cookie(self, simple_app):
+    def test_set_one_cookie(self, simple_app: App) -> None:
         simple_app.headers = [
             ("Content-Type", "text/plain"),
             ("Set-Cookie", "testcookie=1; Path=/; SameSite=strict"),
@@ -727,7 +743,7 @@ class TestV2Events:
             "body": "Hello World\n",
         }
 
-    def test_set_two_cookies(self, simple_app):
+    def test_set_two_cookies(self, simple_app: App) -> None:
         simple_app.headers = [
             ("Content-Type", "text/plain"),
             ("Set-Cookie", "testcookie=abc; Path=/; SameSite=strict"),
@@ -748,8 +764,8 @@ class TestV2Events:
 
     @parametrize_default_text_content_type
     def test_get_binary_support_default_text_content_types(
-        self, simple_app, text_content_type
-    ):
+        self, simple_app: App, text_content_type: str
+    ) -> None:
         simple_app.handler = make_lambda_handler(simple_app, binary_support=True)
         simple_app.headers = [("Content-Type", text_content_type)]
 
@@ -764,8 +780,8 @@ class TestV2Events:
 
     @parametrize_custom_text_content_type
     def test_get_binary_support_custom_text_content_types(
-        self, simple_app, text_content_type
-    ):
+        self, simple_app: App, text_content_type: str
+    ) -> None:
         simple_app.handler = make_lambda_handler(
             simple_app,
             binary_support=True,
@@ -782,7 +798,7 @@ class TestV2Events:
             "body": "Hello World\n",
         }
 
-    def test_get_binary_support_binary(self, simple_app):
+    def test_get_binary_support_binary(self, simple_app: App) -> None:
         simple_app.handler = make_lambda_handler(simple_app, binary_support=True)
         simple_app.headers = [("Content-Type", "application/octet-stream")]
         simple_app.response = b"\x13\x37"
@@ -799,8 +815,8 @@ class TestV2Events:
 
     @parametrize_default_text_content_type
     def test_get_binary_support_binary_default_text_with_gzip_content_encoding(
-        self, simple_app, text_content_type
-    ):
+        self, simple_app: App, text_content_type: str
+    ) -> None:
         simple_app.handler = make_lambda_handler(simple_app, binary_support=True)
         simple_app.headers = [
             ("Content-Type", text_content_type),
@@ -823,8 +839,8 @@ class TestV2Events:
 
     @parametrize_custom_text_content_type
     def test_get_binary_support_binary_custom_text_with_gzip_content_encoding(
-        self, simple_app, text_content_type
-    ):
+        self, simple_app: App, text_content_type: str
+    ) -> None:
         simple_app.handler = make_lambda_handler(
             simple_app,
             binary_support=True,
@@ -849,14 +865,14 @@ class TestV2Events:
             "body": b64encode(b"\x13\x37").decode("utf-8"),
         }
 
-    def test_plain_header(self, simple_app):
+    def test_plain_header(self, simple_app: App) -> None:
         event = make_v2_event(headers={"Test-Header": "foo"})
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["HTTP_TEST_HEADER"] == "foo"
 
-    def test_special_headers(self, simple_app):
+    def test_special_headers(self, simple_app: App) -> None:
         event = make_v2_event(
             headers={
                 "Content-Type": "text/plain",
@@ -877,14 +893,14 @@ class TestV2Events:
         assert simple_app.environ["SERVER_PORT"] == "123"
         assert simple_app.environ["HTTP_X_FORWARDED_PORT"] == "123"
 
-    def test_path_unquoting(self, simple_app):
+    def test_path_unquoting(self, simple_app: App) -> None:
         event = make_v2_event(path="/api/path%2Finfo")
 
         simple_app.handler(event, None)
 
         assert simple_app.environ["PATH_INFO"] == "/api/path/info"
 
-    def test_empty_and_uncloseable_content(self):
+    def test_empty_and_uncloseable_content(self) -> None:
         def app(environ, start_response):
             start_response("200 OK", [], None)
             return [b"Hi", b"", b" there!", b""]
@@ -901,7 +917,7 @@ class TestV2Events:
 
 
 class TestUnknownVersionEvents:
-    def test_errors(self, simple_app):
+    def test_errors(self, simple_app: App) -> None:
         with pytest.raises(ValueError) as excinfo:
             simple_app.handler({"version": "distant-future"}, None)
 
