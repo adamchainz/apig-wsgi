@@ -95,6 +95,9 @@
         PackageS3Key: '{{ zip_name }}'
         PackageS3ObjectVersion: '{{ (s3_result.stdout|from_json).VersionId }}'
         LambdaIAMRoleArn: '{{ base_stack_result.stack_outputs.LambdaIAMRoleArn }}'
+        VpcId: '{{ vpc_id }}'
+        SubnetId1: '{{ subnet_id_1 }}'
+        SubnetId2: '{{ subnet_id_2 }}'
     register: site_stack_result
 
   - name: debug
@@ -102,3 +105,4 @@
       msg: |
         New style "HTTP API" using v2 events at {{ site_stack_result.stack_outputs.HttpApiUrl }}
         Old style REST API using v1 events at {{ site_stack_result.stack_outputs.RestApiUrl }}
+        ALB at {{ site_stack_result.stack_outputs.AlbUrl }}

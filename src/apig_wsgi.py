@@ -13,6 +13,8 @@ DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES = (
     "application/vnd.api+json",
 )
 
+RESERVED_URI_CHARACTERS = r"!#$&'()*+,/:;=?@[]%"
+
 
 def make_lambda_handler(
     wsgi_app, binary_support=None, non_binary_content_type_prefixes=None
@@ -37,13 +39,19 @@ def make_lambda_handler(
     non_binary_content_type_prefixes = tuple(non_binary_content_type_prefixes)
 
     def handler(event, context):
-        # Assume version 1 since ALB isn't documented as sending a version.
-        version = event.get("version", "1.0")
-        if version == "1.0":
+        # ALB doesn't send a version, but requestContext will contain a key named 'elb'.
+        if "requestContext" in event and "elb" in event["requestContext"]:
+            version = "alb"
+        else:
+            version = event.get("version", "1.0")
+
+        if version in ("1.0", "alb"):
             # Binary support deafults 'off' on version 1
             event_binary_support = binary_support or False
             environ = get_environ_v1(
-                event, context, binary_support=event_binary_support
+                event,
+                context,
+                encode_query_params=(version == "1.0"),
             )
             response = V1Response(
                 binary_support=event_binary_support,
@@ -65,7 +73,7 @@ def make_lambda_handler(
     return handler
 
 
-def get_environ_v1(event, context, binary_support):
+def get_environ_v1(event, context, encode_query_params):
     body = get_body(event)
     environ = {
         "CONTENT_LENGTH": str(len(body)),
@@ -87,15 +95,24 @@ def get_environ_v1(event, context, binary_support):
         "apig_wsgi.multi_value_headers": False,
     }
 
+    if encode_query_params:
+        safe_chars = ""
+    else:
+        safe_chars = RESERVED_URI_CHARACTERS
+
     # Multi-value query strings need explicit activation on ALB
     if "multiValueQueryStringParameters" in event:
         environ["QUERY_STRING"] = urlencode(
             # may be None when testing on console
             event["multiValueQueryStringParameters"] or (),
             doseq=True,
+            safe=safe_chars,
         )
     else:
-        environ["QUERY_STRING"] = urlencode(event.get("queryStringParameters") or ())
+        environ["QUERY_STRING"] = urlencode(
+            event.get("queryStringParameters") or (),
+            safe=safe_chars,
+        )
 
     # Multi-value headers need explicit activation on ALB
     if "multiValueHeaders" in event:

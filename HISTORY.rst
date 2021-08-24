@@ -2,6 +2,8 @@
 History
 =======
 
+* Fix handling of query string encoding in ALB deployments.
+
 2.11.0 (2021-05-10)
 -------------------
 
