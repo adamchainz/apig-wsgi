@@ -13,27 +13,7 @@ DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES = (
     "application/vnd.api+json",
 )
 
-RESERVED_URI_CHARACTERS = [
-    "!",
-    "#",
-    "$",
-    "&",
-    "'",
-    "(",
-    ")",
-    "*",
-    "+",
-    ",",
-    "/",
-    ":",
-    ";",
-    "=",
-    "?",
-    "@",
-    "[",
-    "]",
-    "%",
-]
+RESERVED_URI_CHARACTERS = r"!#$&'()*+,/:;=?@[]%"
 
 
 def make_lambda_handler(
@@ -115,10 +95,10 @@ def get_environ_v1(event, context, encode_query_params):
         "apig_wsgi.multi_value_headers": False,
     }
 
-    if not encode_query_params:
-        safe_chars = "".join(RESERVED_URI_CHARACTERS)
-    else:
+    if encode_query_params:
         safe_chars = ""
+    else:
+        safe_chars = RESERVED_URI_CHARACTERS
 
     # Multi-value query strings need explicit activation on ALB
     if "multiValueQueryStringParameters" in event:
