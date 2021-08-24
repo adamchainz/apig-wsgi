@@ -2,6 +2,9 @@
 History
 =======
 
+2.12.0 (2021-08-24)
+-------------------
+
 * Fix handling of query string encoding in ALB deployments.
 
   Thanks to Jason Capriotti for the fix in
