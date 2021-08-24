@@ -4,6 +4,9 @@ History
 
 * Fix handling of query string encoding in ALB deployments.
 
+  Thanks to Jason Capriotti for the fix in
+  `PR #254 <https://github.com/adamchainz/apig-wsgi/pull/254>`__.
+
 2.11.0 (2021-05-10)
 -------------------
 
