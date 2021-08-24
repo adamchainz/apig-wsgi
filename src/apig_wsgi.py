@@ -65,10 +65,14 @@ def make_lambda_handler(
         else:
             version = event.get("version", "1.0")
 
-        if version == "1.0":
+        if version in ("1.0", "alb"):
             # Binary support deafults 'off' on version 1
             event_binary_support = binary_support or False
-            environ = get_environ_v1(event, context, encode_query_params=True)
+            environ = get_environ_v1(
+                event,
+                context,
+                encode_query_params=(version == "1.0"),
+            )
             response = V1Response(
                 binary_support=event_binary_support,
                 non_binary_content_type_prefixes=non_binary_content_type_prefixes,
@@ -79,14 +83,6 @@ def make_lambda_handler(
             response = V2Response(
                 binary_support=True,
                 non_binary_content_type_prefixes=non_binary_content_type_prefixes,
-            )
-        elif version == "alb":
-            event_binary_support = binary_support or False
-            environ = get_environ_v1(event, context, encode_query_params=False)
-            response = V1Response(
-                binary_support=event_binary_support,
-                non_binary_content_type_prefixes=non_binary_content_type_prefixes,
-                multi_value_headers=environ["apig_wsgi.multi_value_headers"],
             )
         else:
             raise ValueError("Unknown version {!r}".format(event["version"]))
