@@ -60,9 +60,10 @@ def make_lambda_handler(
 
     def handler(event, context):
         # ALB doesn't send a version, but requestContext will contain a key named 'elb'.
-        version = event.get("version", "1.0")
-        if event.get("requestContext") and event["requestContext"].get("elb"):
+        if "requestContext" in event and "elb" in event["requestContext"]:
             version = "alb"
+        else:
+            version = event.get("version", "1.0")
 
         if version == "1.0":
             # Binary support deafults 'off' on version 1
