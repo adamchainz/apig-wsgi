@@ -47,15 +47,12 @@ other requirements into it, and run the deployment playbook:
    source venv/bin/activate
    python -m pip install -U pip wheel
    python -m pip install -r requirements.txt
+   ansible-playbook playbook.yml
 
-To run the playbook, you'll need to specify a VPC ID and two subnet IDs in order
-to create an ALB.
+Ansible will build the application and deploy it to the `eu-central-1` region
+(this can be changed in the plyabook).
 
-.. code-block:: sh
-
-   ansible-playbook playbook.yml -e "vpc_id=vpc-12345678" -e "subnet_id_1=subnet-12345678" -e "subnet_id_2=subnet-12345678"
-
-Ansible should complete with a ``PLAY RECAP`` at the end like:
+The playbook run should complete with a ``PLAY RECAP`` at the end like:
 
 .. code-block:: sh
 
@@ -65,13 +62,29 @@ Ansible should complete with a ``PLAY RECAP`` at the end like:
 Check that ``failed=0`` - if not, see the preceding output for error
 messages.
 
-Also in the output there is a final ``debug`` task displaying the URL
-your deployment can be accessed at in production - open it in a web
-browser to check it out!
+Also in the output there is a final ``debug`` task displaying the URL’s
+of the deployments. Open them in a web browser to check them out!
+
+If you want to test the ALB deployment as well, you’ll need to provide some
+extra variables: the ID of the VPC and two subnets to create the ALB in.
+These can be retrieved from `the VPC console
+<https://eu-central-1.console.aws.amazon.com/vpc/home?region=eu-central-1#subnets:>`__.
+
+Pass them in like:
+
+.. code-block:: sh
+
+   ansible-playbook playbook.yml -e vpc_id=vpc-12345678 -e subnet_id_1=subnet-12345678 -e subnet_id_2=subnet-12345678
+
+You can delete the ALB by re-running the playbook without those parameters
+defined.
 
 To Clean Up
 -----------
 
 The playbook creates two CloudFormation stacks prefixed with 'apig-wsgi', by
-default in the eu-central-1 region. Delete the site stack, then delete the base
+default in the eu-central-1 region. You can see these on `the CloudFormation
+console <https://eu-central-1.console.aws.amazon.com/cloudformation/home?region=eu-central-1#/stacks>`__.
+
+To clean up, first delete the site stack, then delete the base
 stack (which will require manual removal of the files in the S3 bucket).

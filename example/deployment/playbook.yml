@@ -6,6 +6,9 @@
     aws_region: eu-central-1
     code_path: ../app/
     zip_name: testapp.zip
+    vpc_id: ''
+    subnet_id_1: ''
+    subnet_id_2: ''
   tasks:
 
   # 1. Create a Lambda package zip file including all dependencies
@@ -105,4 +108,4 @@
       msg: |
         New style "HTTP API" using v2 events at {{ site_stack_result.stack_outputs.HttpApiUrl }}
         Old style REST API using v1 events at {{ site_stack_result.stack_outputs.RestApiUrl }}
-        ALB at {{ site_stack_result.stack_outputs.AlbUrl }}
+        {% if site_stack_result.stack_outputs.AlbUrl %}ALB at http://{{ site_stack_result.stack_outputs.AlbUrl }}{% endif %}
