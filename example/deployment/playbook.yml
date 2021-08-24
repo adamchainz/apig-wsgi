@@ -38,7 +38,7 @@
     register: abs_build_path
 
   - name: install dependencies into build directory
-    command: python3.8 -m pip install -r requirements.txt --target .
+    command: python3.9 -m pip install -r requirements.txt --target .
     args:
       chdir: '{{ abs_build_path.stdout }}'
     environment:
@@ -46,8 +46,8 @@
 
   - name: install development version of apig-wsgi
     copy:
-      src: '{{ abs_build_path.stdout|dirname|dirname|dirname }}/src/apig_wsgi.py'
-      dest: '{{ abs_build_path.stdout }}/apig_wsgi.py'
+      src: '{{ abs_build_path.stdout|dirname|dirname|dirname }}/src/apig_wsgi/'
+      dest: '{{ abs_build_path.stdout }}/apig_wsgi/'
 
   - name: remove .pyc files from build directory
     command: find . -type f -name "*.py[co]" -delete
