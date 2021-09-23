@@ -1,7 +1,17 @@
 import sys
 from base64 import b64encode
 from io import BytesIO
-from typing import Any, Callable, Dict, Generator, Iterable, List, Optional, Tuple
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    Iterable,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import pytest
 
@@ -82,6 +92,13 @@ class ContextStub:
 # v1 tests
 
 
+class Sentinel:
+    pass
+
+
+SENTINEL = Sentinel()
+
+
 def make_v1_event(
     *,
     method: str = "GET",
@@ -92,7 +109,7 @@ def make_v1_event(
     headers_multi: bool = True,
     body: str = "",
     binary: bool = False,
-    request_context: Optional[Dict[str, Any]] = None,
+    request_context: Union[Dict[str, Any], None, Sentinel] = SENTINEL,
 ) -> Dict[str, Any]:
     if headers is None:
         headers = {"Host": ["example.com"]}
@@ -125,7 +142,7 @@ def make_v1_event(
         event["body"] = body
         event["isBase64Encoded"] = False
 
-    if request_context is not None:
+    if request_context is not SENTINEL:
         event["requestContext"] = request_context
 
     return event
@@ -506,6 +523,14 @@ class TestV1Events:
         simple_app.handler(event, None)
 
         assert simple_app.environ["apig_wsgi.request_context"] == context
+
+    def test_request_context_none(self, simple_app: App) -> None:
+        # Invoking lambdas can lead to requestContext being JSON null
+        event = make_v1_event(request_context=None)
+
+        simple_app.handler(event, None)
+
+        # Simply don't crash
 
     def test_full_event(self, simple_app: App) -> None:
         event = make_v1_event()

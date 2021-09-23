@@ -2,6 +2,10 @@
 History
 =======
 
+* Handle ``requestContext`` being ``None``, as can happen from Lambda invoke.
+
+  Thanks to scottmn for the report in `Issue #289 <https://github.com/adamchainz/apig-wsgi/issues/289>`__.
+
 2.12.0 (2021-08-24)
 -------------------
 
