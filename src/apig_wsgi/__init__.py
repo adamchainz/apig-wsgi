@@ -58,7 +58,11 @@ def make_lambda_handler(
 
     def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
         # ALB doesn't send a version, but requestContext will contain a key named 'elb'.
-        if "requestContext" in event and "elb" in event["requestContext"]:
+        if (
+            "requestContext" in event
+            and isinstance(event["requestContext"], dict)
+            and "elb" in event["requestContext"]
+        ):
             version = "alb"
         else:
             version = event.get("version", "1.0")
