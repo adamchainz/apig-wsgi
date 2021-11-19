@@ -79,5 +79,5 @@ jobs:
           name: html-report
           path: htmlcov
 
-      - command: Terminal report
+      - name: Terminal report
         run: python -m coverage report --fail-under=100
