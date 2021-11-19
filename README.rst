@@ -6,7 +6,7 @@ apig-wsgi
    :target: https://github.com/adamchainz/apig-wsgi/actions?workflow=CI
 
 .. image:: https://img.shields.io/badge/Coverage-100%25-success?style=for-the-badge
-   :target: https://app.codecov.io/gh/adamchainz/apig-wsgi
+   :target: https://github.com/adamchainz/apig-wsgi/actions
 
 .. image:: https://img.shields.io/pypi/v/apig-wsgi.svg?style=for-the-badge
    :target: https://pypi.org/project/apig-wsgi/
