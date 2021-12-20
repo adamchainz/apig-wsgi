@@ -6,7 +6,7 @@
 #
 asgiref==3.4.1
     # via django
-django==3.2.7
+django==3.2.10
     # via -r requirements.in
 pytz==2021.1
     # via django
