@@ -542,7 +542,7 @@ class TestV1Events:
     def test_elb_health_check(self, simple_app: App) -> None:
         """
         Check compatibility with health check events as per:
-        https://docs.aws.amazon.com/elasticloadbalancing/latest/application/lambda-functions.html#enable-health-checks-lambda  # noqa: B950
+        https://docs.aws.amazon.com/elasticloadbalancing/latest/application/lambda-functions.html#enable-health-checks-lambda  # noqa: E501
         """
         event = {
             "requestContext": {"elb": {"targetGroupArn": "..."}},
