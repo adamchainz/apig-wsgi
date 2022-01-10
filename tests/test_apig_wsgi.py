@@ -308,7 +308,6 @@ class TestV1Events:
         }
 
     def test_post_binary_support(self, simple_app: App) -> None:
-        simple_app.handler = make_lambda_handler(simple_app)
         event = make_v1_event(method="POST", body="dogfood", binary=True)
 
         response = simple_app.handler(event, None)
@@ -593,8 +592,6 @@ def make_alb_event(**kwargs: Any) -> Dict[str, Any]:
     )
 
     del event["version"]
-    if "isBase64Encoded" not in event:
-        event["isBase64Encoded"] = False
 
     return event
 
@@ -917,6 +914,36 @@ class TestV2Events:
         assert simple_app.environ["HTTP_X_FORWARDED_PROTO"] == "https"
         assert simple_app.environ["SERVER_PORT"] == "123"
         assert simple_app.environ["HTTP_X_FORWARDED_PORT"] == "123"
+
+    def test_post(self, simple_app: App) -> None:
+        event = make_v2_event(method="POST", body="The World is Large")
+
+        response = simple_app.handler(event, None)
+
+        assert simple_app.environ["wsgi.input"].read() == b"The World is Large"
+        assert simple_app.environ["CONTENT_LENGTH"] == str(len(b"The World is Large"))
+        assert response == {
+            "statusCode": 200,
+            "cookies": [],
+            "headers": {"content-type": "text/plain"},
+            "isBase64Encoded": False,
+            "body": "Hello World\n",
+        }
+
+    def test_post_binary_support(self, simple_app: App) -> None:
+        event = make_v2_event(method="POST", body="dogfood", binary=True)
+
+        response = simple_app.handler(event, None)
+
+        assert simple_app.environ["wsgi.input"].read() == b"dogfood"
+        assert simple_app.environ["CONTENT_LENGTH"] == str(len(b"dogfood"))
+        assert response == {
+            "statusCode": 200,
+            "cookies": [],
+            "headers": {"content-type": "text/plain"},
+            "isBase64Encoded": False,
+            "body": "Hello World\n",
+        }
 
     def test_path_unquoting(self, simple_app: App) -> None:
         event = make_v2_event(path="/api/path%2Finfo")
