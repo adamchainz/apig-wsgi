@@ -1,17 +1,9 @@
+from __future__ import annotations
+
 import sys
 from base64 import b64encode
 from io import BytesIO
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generator,
-    Iterable,
-    List,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import Any, Callable, Generator, Iterable
 
 import pytest
 
@@ -21,7 +13,7 @@ from apig_wsgi import _ExcInfoType, make_lambda_handler
 class App:
     def __init__(
         self,
-        headers: List[Tuple[str, str]],
+        headers: list[tuple[str, str]],
         response: bytes,
         exc_info: _ExcInfoType,
     ) -> None:
@@ -32,9 +24,9 @@ class App:
 
     def __call__(
         self,
-        environ: Dict[str, Any],
+        environ: dict[str, Any],
         start_response: Callable[
-            [str, List[Tuple[str, str]], _ExcInfoType], Callable[[bytes], Any]
+            [str, list[tuple[str, str]], _ExcInfoType], Callable[[bytes], Any]
         ],
     ) -> Iterable[bytes]:
         self.environ = environ
@@ -76,7 +68,7 @@ class ContextStub:
         function_version: str = "$LATEST",
         invoked_function_arn: str = "arn:test:lambda:us-east-1:0123456789:function:app",
         memory_limit_in_mb: int = 128,
-        aws_request_id: Optional[str] = None,
+        aws_request_id: str | None = None,
         log_stream_name: str = "app-group",
         log_group_name: str = "app-stream",
     ) -> None:
@@ -103,18 +95,18 @@ def make_v1_event(
     *,
     method: str = "GET",
     path: str = "/",
-    qs_params: Optional[Dict[str, List[str]]] = None,
+    qs_params: dict[str, list[str]] | None = None,
     qs_params_multi: bool = True,
-    headers: Optional[Dict[str, List[str]]] = None,
+    headers: dict[str, list[str]] | None = None,
     headers_multi: bool = True,
     body: str = "",
     binary: bool = False,
-    request_context: Union[Dict[str, Any], None, Sentinel] = SENTINEL,
-) -> Dict[str, Any]:
+    request_context: dict[str, Any] | None | Sentinel = SENTINEL,
+) -> dict[str, Any]:
     if headers is None:
         headers = {"Host": ["example.com"]}
 
-    event: Dict[str, Any] = {
+    event: dict[str, Any] = {
         "version": "1.0",
         "httpMethod": method,
         "path": path,
@@ -583,7 +575,7 @@ class TestV1Events:
 # ALB tests
 
 
-def make_alb_event(**kwargs: Any) -> Dict[str, Any]:
+def make_alb_event(**kwargs: Any) -> dict[str, Any]:
     event = make_v1_event(
         request_context={
             "elb": {"targetGroupArn": "arn:aws:elasticloadbalancing:::targetgroup/etc"}
@@ -660,18 +652,18 @@ def make_v2_event(
     host: str = "example.com",
     method: str = "GET",
     path: str = "/",
-    query_string: Optional[str] = None,
-    cookies: Optional[List[str]] = None,
-    headers: Optional[Dict[str, str]] = None,
+    query_string: str | None = None,
+    cookies: list[str] | None = None,
+    headers: dict[str, str] | None = None,
     body: str = "",
     binary: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     if cookies is None:
         cookies = []
     if headers is None:
         headers = {"Host": "example.com"}
 
-    event: Dict[str, Any] = {
+    event: dict[str, Any] = {
         "version": "2.0",
         "rawQueryString": query_string,
         "headers": headers,
