@@ -1,15 +1,17 @@
+from __future__ import annotations
+
 import sys
 import urllib
 from base64 import b64decode, b64encode
 from collections import defaultdict
 from io import BytesIO
 from types import TracebackType
-from typing import Any, Callable, Dict, Iterable, List, Optional, Tuple, Type, Union
+from typing import Any, Callable, Dict, Iterable, List, Tuple, Type, Union
 from urllib.parse import urlencode
 
 __all__ = ("make_lambda_handler",)
 
-DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES: Tuple[str, ...] = (
+DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES: tuple[str, ...] = (
     "text/",
     "application/json",
     "application/vnd.api+json",
@@ -33,9 +35,9 @@ _WsgiAppType = Callable[
 
 def make_lambda_handler(
     wsgi_app: _WsgiAppType,
-    binary_support: Optional[bool] = None,
-    non_binary_content_type_prefixes: Optional[Iterable[str]] = None,
-) -> Callable[[Dict[str, Any], Any], Dict[str, Any]]:
+    binary_support: bool | None = None,
+    non_binary_content_type_prefixes: Iterable[str] | None = None,
+) -> Callable[[dict[str, Any], Any], dict[str, Any]]:
     """
     Turn a WSGI app callable into a Lambda handler function suitable for
     running on API Gateway.
@@ -56,7 +58,7 @@ def make_lambda_handler(
     else:
         non_binary_prefixes_tuple = tuple(non_binary_content_type_prefixes)
 
-    def handler(event: Dict[str, Any], context: Any) -> Dict[str, Any]:
+    def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
         # ALB doesn't send a version, but requestContext will contain a key named 'elb'.
         if (
             "requestContext" in event
@@ -98,10 +100,10 @@ def make_lambda_handler(
 
 
 def get_environ_v1(
-    event: Dict[str, Any], context: Any, encode_query_params: bool
-) -> Dict[str, Any]:
+    event: dict[str, Any], context: Any, encode_query_params: bool
+) -> dict[str, Any]:
     body = get_body(event)
-    environ: Dict[str, Any] = {
+    environ: dict[str, Any] = {
         "CONTENT_LENGTH": str(len(body)),
         "HTTP": "on",
         "PATH_INFO": urllib.parse.unquote(event["path"], encoding="iso-8859-1"),
@@ -175,13 +177,13 @@ def get_environ_v1(
 
 
 def get_environ_v2(
-    event: Dict[str, Any], context: Any, binary_support: bool
-) -> Dict[str, Any]:
+    event: dict[str, Any], context: Any, binary_support: bool
+) -> dict[str, Any]:
     body = get_body(event)
     headers = event["headers"]
     http = event["requestContext"]["http"]
 
-    environ: Dict[str, Any] = {
+    environ: dict[str, Any] = {
         "CONTENT_LENGTH": str(len(body)),
         "HTTP": "on",
         "HTTP_COOKIE": ";".join(event.get("cookies", ())),
@@ -227,7 +229,7 @@ def get_environ_v2(
     return environ
 
 
-def get_body(event: Dict[str, Any]) -> bytes:
+def get_body(event: dict[str, Any]) -> bytes:
     body: str = event.get("body", "") or ""
     if event.get("isBase64Encoded", False):
         return b64decode(body)
@@ -239,10 +241,10 @@ class BaseResponse:
         self,
         *,
         binary_support: bool,
-        non_binary_content_type_prefixes: Tuple[str, ...],
+        non_binary_content_type_prefixes: tuple[str, ...],
     ) -> None:
         self.status_code = 500
-        self.headers: List[Tuple[str, str]] = []
+        self.headers: list[tuple[str, str]] = []
         self.body = BytesIO()
         self.binary_support = binary_support
         self.non_binary_content_type_prefixes = non_binary_content_type_prefixes
@@ -250,8 +252,8 @@ class BaseResponse:
     def start_response(
         self,
         status: str,
-        response_headers: List[Tuple[str, str]],
-        exc_info: Optional[_ExcInfoType] = None,
+        response_headers: list[tuple[str, str]],
+        exc_info: _ExcInfoType | None = None,
     ) -> Callable[[bytes], int]:
         if exc_info is not None and exc_info[0] is not None:
             raise exc_info[0](exc_info[1]).with_traceback(exc_info[2])
@@ -290,14 +292,14 @@ class BaseResponse:
     def _get_content_encoding(self) -> str:
         return self._get_header("content-encoding") or ""
 
-    def _get_header(self, header_name: str) -> Optional[str]:
+    def _get_header(self, header_name: str) -> str | None:
         header_name = header_name.lower()
         matching_headers = [v for k, v in self.headers if k.lower() == header_name]
         if len(matching_headers):
             return matching_headers[-1]
         return None
 
-    def as_apig_response(self) -> Dict[str, Any]:  # pragma: no cover
+    def as_apig_response(self) -> dict[str, Any]:  # pragma: no cover
         raise NotImplementedError("Need to use subclass")
 
 
@@ -306,8 +308,8 @@ class V1Response(BaseResponse):
         super().__init__(**kwargs)
         self.multi_value_headers = multi_value_headers
 
-    def as_apig_response(self) -> Dict[str, Any]:
-        response: Dict[str, Any] = {"statusCode": self.status_code}
+    def as_apig_response(self) -> dict[str, Any]:
+        response: dict[str, Any] = {"statusCode": self.status_code}
         # Return multiValueHeaders as header if support is required
         if self.multi_value_headers:
             headers = defaultdict(list)
@@ -328,8 +330,8 @@ class V1Response(BaseResponse):
 
 
 class V2Response(BaseResponse):
-    def as_apig_response(self) -> Dict[str, Any]:
-        response: Dict[str, Any] = {
+    def as_apig_response(self) -> dict[str, Any]:
+        response: dict[str, Any] = {
             "statusCode": self.status_code,
         }
 
