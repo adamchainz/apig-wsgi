@@ -106,6 +106,7 @@
   - name: debug
     debug:
       msg: |
+        Function URL at {{ site_stack_result.stack_outputs.FunctionUrl }}
         New style "HTTP API" using v2 events at {{ site_stack_result.stack_outputs.HttpApiUrl }}
         Old style REST API using v1 events at {{ site_stack_result.stack_outputs.RestApiUrl }}
         {% if site_stack_result.stack_outputs.AlbUrl %}ALB at http://{{ site_stack_result.stack_outputs.AlbUrl }}{% endif %}
