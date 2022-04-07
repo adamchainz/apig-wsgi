@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import random
 from html import escape
 from pathlib import Path
@@ -9,6 +10,18 @@ from django.http import HttpRequest, HttpResponse
 
 MODULE_DIR = Path(__file__).resolve(strict=True).parent
 
+UNSAFE_OS_ENVIRON_KEYS = frozenset(
+    (
+        "_X_AMZN_TRACE_ID",
+        "AWS_ACCESS_KEY_ID",
+        "AWS_LAMBDA_FUNCTION_NAME",
+        "AWS_LAMBDA_LOG_GROUP_NAME",
+        "AWS_LAMBDA_LOG_STREAM_NAME",
+        "AWS_SECRET_ACCESS_KEY",
+        "AWS_SESSION_TOKEN",
+    )
+)
+
 
 def index(request: HttpRequest) -> HttpResponse:
     headers = pformat(dict(request.headers))
@@ -16,9 +29,16 @@ def index(request: HttpRequest) -> HttpResponse:
     request_context = pformat(request.environ.get("apig_wsgi.request_context", None))
     full_event = pformat(request.environ.get("apig_wsgi.full_event", None))
     environ = pformat(request.environ)
+    os_environ = pformat(
+        {
+            k: ("*****" if k in UNSAFE_OS_ENVIRON_KEYS else v)
+            for k, v in os.environ.items()
+        }
+    )
 
     response = HttpResponse(
         f"""
+        <!doctype html>
         <html>
           <head>
             <title>apig-wsgi test app</title>
@@ -36,6 +56,8 @@ def index(request: HttpRequest) -> HttpResponse:
             <pre>{escape(full_event)}</pre>
             <h2>WSGI Environ</h2>
             <pre>{escape(environ)}</pre>
+            <h2>Environment Variables</h2>
+            <pre>{escape(os_environ)}</pre>
           </body>
         </html>
         """

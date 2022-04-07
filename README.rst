@@ -53,16 +53,18 @@ Improve your skills with `one of my books <https://adamj.eu/books/>`__.
 Usage
 =====
 
-Use apig-wsgi in your lambda function that you attach to one of:
+Use apig-wsgi in your AWS Lambda Function that you attach to one of:
 
-* An ALB.
-* An API Gateway “REST API”.
-* An API Gateway “HTTP API”.
+* A `Lambda Function URL <https://docs.aws.amazon.com/lambda/latest/dg/lambda-urls.html>`__
+* An `API Gateway “HTTP API” <https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api.html>`__
+* An `API Gateway “REST API” <https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-rest-api.html>`__
+* An `ALB <https://docs.aws.amazon.com/lambda/latest/dg/services-alb.html>`__
+
 
 Both “format version 1” and “format version 2” are supported
 (`documentation <https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html>`__).
-apig-wsgi will automatically detect the version in use. At time of writing,
-“format version 2” is only supported on HTTP API’s.
+apig-wsgi will automatically detect the version in use.
+At time of writing, “format version 2” is used for Lambda Function URL’s and API Gateway HTTP API’s.
 
 ``make_lambda_handler(app, binary_support=None, non_binary_content_type_prefixes=None)``
 ----------------------------------------------------------------------------------------
@@ -117,5 +119,5 @@ WSGI environ, which is ``True`` if they are enabled and ``False`` otherwise.
 Example
 =======
 
-An example application with Ansible deployment is provided in the ``example/``
-directory in the repository. See the ``README.rst`` there for guidance.
+An example Django project with Ansible deployment is provided in the ``example/`` directory in the repository.
+See the ``README.rst`` there for guidance.
