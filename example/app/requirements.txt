@@ -6,7 +6,7 @@
 #
 asgiref==3.4.1
     # via django
-django==4.0.2
+django==4.0.4
     # via -r requirements.in
 sqlparse==0.4.2
     # via django
