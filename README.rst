@@ -18,8 +18,7 @@ apig-wsgi
    :target: https://github.com/pre-commit/pre-commit
    :alt: pre-commit
 
-Wrap a WSGI application in an AWS Lambda handler function for running on
-API Gateway or an ALB.
+Wrap a `WSGI <https://peps.python.org/pep-3333/>`__ application in an AWS Lambda handler function for running on API Gateway or an ALB.
 
 A quick example:
 
