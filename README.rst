@@ -40,7 +40,7 @@ Use **pip**:
 
     python -m pip install apig-wsgi
 
-Python 3.7 to 3.10 supported.
+Python 3.7 to 3.11 supported.
 
 ----
 
