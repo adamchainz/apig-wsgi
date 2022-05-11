@@ -1,4 +1,3 @@
-prune example
 include HISTORY.rst
 include LICENSE
 include pyproject.toml
