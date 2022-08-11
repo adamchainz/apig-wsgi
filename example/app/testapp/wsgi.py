@@ -2,15 +2,18 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Any
+from typing import Any, cast
 
 from django.core.wsgi import get_wsgi_application
 
 from apig_wsgi import make_lambda_handler
+from apig_wsgi.compat import WSGIApplication
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "testapp.settings")
 
-application = get_wsgi_application()
+application = cast(  # incomplete hints in django-stubs
+    WSGIApplication, get_wsgi_application()
+)
 
 apig_wsgi_handler = make_lambda_handler(application, binary_support=True)
 

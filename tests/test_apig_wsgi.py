@@ -26,7 +26,12 @@ class App:
         self,
         environ: dict[str, Any],
         start_response: Callable[
-            [str, list[tuple[str, str]], _ExcInfoType], Callable[[bytes], Any]
+            [
+                str,
+                list[tuple[str, str]],
+                _ExcInfoType,
+            ],
+            Callable[[bytes], Any],
         ],
     ) -> Iterable[bytes]:
         self.environ = environ
