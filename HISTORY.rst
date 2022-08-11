@@ -2,6 +2,8 @@
 History
 =======
 
+* Make type hints more correct by using ``wsgiref.types`` on Python 3.11+, and backport it on older Python versions.
+
 2.14.0 (2022-05-11)
 -------------------
 

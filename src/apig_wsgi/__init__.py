@@ -6,8 +6,10 @@ from base64 import b64decode, b64encode
 from collections import defaultdict
 from io import BytesIO
 from types import TracebackType
-from typing import Any, Callable, Dict, Iterable, List, Tuple, Type, Union
+from typing import Any, Callable, Iterable, Sequence, Tuple, Type, Union
 from urllib.parse import urlencode
+
+from apig_wsgi.compat import WSGIApplication
 
 __all__ = ("make_lambda_handler",)
 
@@ -20,21 +22,14 @@ DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES: tuple[str, ...] = (
 RESERVED_URI_CHARACTERS = r"!#$&'()*+,/:;=?@[]%"
 
 _ExcInfoType = Union[
-    None,
     Tuple[Type[BaseException], BaseException, TracebackType],
     Tuple[None, None, None],
-]
-_WsgiAppType = Callable[
-    [
-        Dict[str, Any],
-        Callable[[str, List[Tuple[str, str]], _ExcInfoType], Callable[[bytes], Any]],
-    ],
-    Iterable[bytes],
+    None,
 ]
 
 
 def make_lambda_handler(
-    wsgi_app: _WsgiAppType,
+    wsgi_app: WSGIApplication,
     binary_support: bool | None = None,
     non_binary_content_type_prefixes: Iterable[str] | None = None,
 ) -> Callable[[dict[str, Any], Any], dict[str, Any]]:
@@ -92,7 +87,7 @@ def make_lambda_handler(
             )
         else:
             raise ValueError("Unknown version {!r}".format(event["version"]))
-        result = wsgi_app(environ, response.start_response)
+        result = wsgi_app(environ, response.start_response)  # type: ignore [arg-type]
         response.consume(result)
         return response.as_apig_response()
 
@@ -252,8 +247,8 @@ class BaseResponse:
     def start_response(
         self,
         status: str,
-        response_headers: list[tuple[str, str]],
-        exc_info: _ExcInfoType | None = None,
+        response_headers: Sequence[tuple[str, str]],
+        exc_info: _ExcInfoType = None,
     ) -> Callable[[bytes], int]:
         if exc_info is not None and exc_info[0] is not None:
             raise exc_info[0](exc_info[1]).with_traceback(exc_info[2])

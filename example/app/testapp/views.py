@@ -6,7 +6,8 @@ from html import escape
 from pathlib import Path
 from pprint import pformat
 
-from django.http import HttpRequest, HttpResponse
+from django.core.handlers.wsgi import WSGIRequest
+from django.http import HttpResponse
 
 MODULE_DIR = Path(__file__).resolve(strict=True).parent
 
@@ -23,7 +24,7 @@ UNSAFE_OS_ENVIRON_KEYS = frozenset(
 )
 
 
-def index(request: HttpRequest) -> HttpResponse:
+def index(request: WSGIRequest) -> HttpResponse:
     headers = pformat(dict(request.headers))
     params = pformat(dict(request.GET))
     request_context = pformat(request.environ.get("apig_wsgi.request_context", None))
@@ -71,7 +72,7 @@ def index(request: HttpRequest) -> HttpResponse:
     return response
 
 
-def favicon(request: HttpRequest) -> HttpResponse:
+def favicon(request: WSGIRequest) -> HttpResponse:
     return HttpResponse(
         (MODULE_DIR / "favicon.ico").read_bytes(),
         content_type="image/x-icon",
