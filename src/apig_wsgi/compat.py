@@ -28,7 +28,7 @@ else:
             headers: list[tuple[str, str]],
             exc_info: _OptExcInfo | None = ...,
             # /,
-        ) -> Callable[[bytes], object]:
+        ) -> Callable[[bytes], object]:  # pragma: no cover
             ...
 
     WSGIEnvironment = Dict[str, Any]
