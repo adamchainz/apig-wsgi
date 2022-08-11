@@ -9,7 +9,12 @@ if sys.version_info >= (3, 11):
 else:
     # Partial backport of wsgiref.types
     from types import TracebackType
-    from typing import Any, Callable, Dict, Iterable, Protocol, Tuple, Type, Union
+    from typing import Any, Callable, Dict, Iterable, Tuple, Type, Union
+
+    if sys.version_info >= (3, 8):
+        from typing import Protocol
+    else:
+        from typing_extensions import Protocol
 
     _ExcInfo = Tuple[Type[BaseException], BaseException, TracebackType]
     _OptExcInfo = Union[_ExcInfo, Tuple[None, None, None]]
