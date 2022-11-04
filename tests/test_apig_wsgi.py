@@ -9,6 +9,7 @@ from typing import Generator
 from typing import Iterable
 
 import pytest
+
 from apig_wsgi import _ExcInfoType
 from apig_wsgi import make_lambda_handler
 

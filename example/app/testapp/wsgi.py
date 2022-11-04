@@ -5,9 +5,10 @@ import os
 from typing import Any
 from typing import cast
 
+from django.core.wsgi import get_wsgi_application
+
 from apig_wsgi import make_lambda_handler
 from apig_wsgi.compat import WSGIApplication
-from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "testapp.settings")
 
