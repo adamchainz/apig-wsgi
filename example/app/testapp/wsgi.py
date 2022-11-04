@@ -2,7 +2,8 @@ from __future__ import annotations
 
 import json
 import os
-from typing import Any, cast
+from typing import Any
+from typing import cast
 
 from django.core.wsgi import get_wsgi_application
 

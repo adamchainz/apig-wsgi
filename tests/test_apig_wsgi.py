@@ -3,11 +3,15 @@ from __future__ import annotations
 import sys
 from base64 import b64encode
 from io import BytesIO
-from typing import Any, Callable, Generator, Iterable
+from typing import Any
+from typing import Callable
+from typing import Generator
+from typing import Iterable
 
 import pytest
 
-from apig_wsgi import _ExcInfoType, make_lambda_handler
+from apig_wsgi import _ExcInfoType
+from apig_wsgi import make_lambda_handler
 
 
 class App:
