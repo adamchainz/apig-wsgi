@@ -64,10 +64,10 @@ def index(request: WSGIRequest) -> HttpResponse:
         """
     )
     response.set_cookie(
-        "testcookie", str(random.randint(0, 1_000_000)), samesite="strict"
+        "testcookie", str(random.randint(0, 1_000_000)), samesite="Strict"
     )
     response.set_cookie(
-        "testcookie2", str(random.randint(0, 1_000_000)), samesite="strict"
+        "testcookie2", str(random.randint(0, 1_000_000)), samesite="Strict"
     )
     return response
 
