@@ -42,7 +42,7 @@
     args:
       chdir: '{{ abs_build_path.stdout }}'
     environment:
-      PIP_REQUIRE_VIRTUALENV: ''
+      PIP_REQUIRE_VIRTUALENV: '0'
 
   - name: install development version of apig-wsgi
     copy:
