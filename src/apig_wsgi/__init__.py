@@ -94,7 +94,7 @@ def make_lambda_handler(
             )
         else:
             raise ValueError("Unknown version {!r}".format(event["version"]))
-        result = wsgi_app(environ, response.start_response)  # type: ignore [arg-type]
+        result = wsgi_app(environ, response.start_response)
         response.consume(result)
         return response.as_apig_response()
 
