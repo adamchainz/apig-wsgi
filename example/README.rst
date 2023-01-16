@@ -20,8 +20,8 @@ We use vanilla venv, pip, and Django to run:
 .. code-block:: sh
 
    cd app
-   python -m venv venv
-   source venv/bin/activate
+   python -m venv .venv
+   source .venv/bin/activate
    python -m pip install -U pip wheel
    python -m pip install -r requirements.txt
    python -m pip install -e ../..
@@ -43,8 +43,8 @@ other requirements into it, and run the deployment playbook:
 .. code-block:: sh
 
    cd deployment
-   python -m venv venv
-   source venv/bin/activate
+   python -m venv .venv
+   source .venv/bin/activate
    python -m pip install -U pip wheel
    python -m pip install -r requirements.txt
    ansible-playbook playbook.yml
