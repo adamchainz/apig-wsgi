@@ -2,6 +2,11 @@
 Changelog
 =========
 
+* Avoid v2 trailing slash removal by reading ``rawPath`` rather than ``requestContext.http.path``.
+  This change prevents redirect loops on applications that automatically append slash, like Django’s default setup.
+
+  Thanks to Jon Culver for the report in `Issue #376 <https://github.com/adamchainz/apig-wsgi/issues/376>`__ and Tobias McNulty for the fix in `PR #426 <https://github.com/adamchainz/apig-wsgi/pull/426>`__.
+
 2.15.0 (2022-08-11)
 -------------------
 

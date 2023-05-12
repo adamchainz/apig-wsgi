@@ -189,7 +189,7 @@ def get_environ_v2(
         "CONTENT_LENGTH": str(len(body)),
         "HTTP": "on",
         "HTTP_COOKIE": ";".join(event.get("cookies", ())),
-        "PATH_INFO": urllib.parse.unquote(http["path"], encoding="iso-8859-1"),
+        "PATH_INFO": urllib.parse.unquote(event["rawPath"], encoding="iso-8859-1"),
         "QUERY_STRING": event["rawQueryString"],
         "REMOTE_ADDR": http["sourceIp"],
         "REQUEST_METHOD": http["method"],

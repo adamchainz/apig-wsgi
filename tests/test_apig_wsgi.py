@@ -675,12 +675,13 @@ def make_v2_event(
     event: dict[str, Any] = {
         "version": "2.0",
         "rawQueryString": query_string,
+        "rawPath": path,
         "headers": headers,
         "cookies": cookies,
         "requestContext": {
             "http": {
                 "method": method,
-                "path": path,
+                "path": path.rstrip("/"),
                 "sourceIp": "1.2.3.4",
                 "protocol": "https",
             },
