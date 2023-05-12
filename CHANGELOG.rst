@@ -2,6 +2,9 @@
 Changelog
 =========
 
+2.16.0 (2023-05-12)
+-------------------
+
 * Avoid v2 trailing slash removal by reading ``rawPath`` rather than ``requestContext.http.path``.
   This change prevents redirect loops on applications that automatically append slash, like Django’s default setup.
 
