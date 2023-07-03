@@ -2,7 +2,7 @@
 Changelog
 =========
 
-* Support Python 3.12.
+* Drop Python 3.7 support.
 
 2.17.0 (2023-06-13)
 -------------------
