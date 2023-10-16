@@ -31,6 +31,13 @@ A quick example:
     lambda_handler = make_lambda_handler(app)
 
 
+----
+
+**Improve your Django and Git skills** with `my books <https://adamj.eu/books/>`__.
+
+----
+
+
 Installation
 ============
 
@@ -41,13 +48,6 @@ Use **pip**:
     python -m pip install apig-wsgi
 
 Python 3.8 to 3.12 supported.
-
-----
-
-**Working on a Django project?**
-Improve your skills with `one of my books <https://adamj.eu/books/>`__.
-
-----
 
 Usage
 =====
