@@ -85,9 +85,7 @@ def make_lambda_handler(
                 multi_value_headers=environ["apig_wsgi.multi_value_headers"],
             )
         elif version == "2.0":
-            environ = get_environ_v2(
-                event, context, binary_support=bool(binary_support)
-            )
+            environ = get_environ_v2(event, context)
             response = V2Response(
                 binary_support=True,
                 non_binary_content_type_prefixes=non_binary_prefixes_tuple,
@@ -178,9 +176,7 @@ def get_environ_v1(
     return environ
 
 
-def get_environ_v2(
-    event: dict[str, Any], context: Any, binary_support: bool
-) -> dict[str, Any]:
+def get_environ_v2(event: dict[str, Any], context: Any) -> dict[str, Any]:
     body = get_body(event)
     headers = event["headers"]
     http = event["requestContext"]["http"]
