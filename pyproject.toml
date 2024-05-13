@@ -8,15 +8,17 @@ requires = [
 name = "apig-wsgi"
 version = "2.18.0"
 description = "Wrap a WSGI application in an AWS Lambda handler function for running on API Gateway or an ALB."
-readme = {file = "README.rst", content-type = "text/x-rst"}
+readme = { file = "README.rst", content-type = "text/x-rst" }
 keywords = [
   "API Gateway",
   "APIG",
   "AWS",
   "Lambda",
 ]
-license = {text = "MIT"}
-authors = [{name = "Adam Johnson", email = "me@adamj.eu"}]
+license = { text = "MIT" }
+authors = [
+  { name = "Adam Johnson", email = "me@adamj.eu" },
+]
 requires-python = ">=3.8"
 classifiers = [
   "Development Status :: 5 - Production/Stable",
@@ -33,23 +35,21 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  'typing-extensions; python_version < "3.8"',
+  "typing-extensions; python_version<'3.8'",
 ]
-[project.urls]
-Changelog = "https://github.com/adamchainz/apig-wsgi/blob/main/CHANGELOG.rst"
-Funding = "https://adamj.eu/books/"
-Repository = "https://github.com/adamchainz/apig-wsgi"
-
+urls.Changelog = "https://github.com/adamchainz/apig-wsgi/blob/main/CHANGELOG.rst"
+urls.Funding = "https://adamj.eu/books/"
+urls.Repository = "https://github.com/adamchainz/apig-wsgi"
 [tool.isort]
 add_imports = [
-    "from __future__ import annotations"
+  "from __future__ import annotations",
 ]
 force_single_line = true
 profile = "black"
 src_paths = [
-    ".",
-    "example/app",
-    "src",
+  ".",
+  "example/app",
+  "src",
 ]
 
 [tool.pytest.ini_options]
@@ -62,14 +62,14 @@ addopts = """\
 branch = true
 parallel = true
 source = [
-    "apig_wsgi",
-    "tests",
+  "apig_wsgi",
+  "tests",
 ]
 
 [tool.coverage.paths]
 source = [
-    "src",
-    ".tox/**/site-packages",
+  "src",
+  ".tox/**/site-packages",
 ]
 
 [tool.coverage.report]
