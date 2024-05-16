@@ -282,7 +282,11 @@ class BaseResponse:
 
         content_encoding = self._get_content_encoding()
         # Content type is non-binary but the content encoding might be.
-        return "gzip" in content_encoding.lower()
+        is_binary_content = any(
+            compression in content_encoding.lower()
+            for compression in ["gzip", "deflate", "br", "zstd"]
+        )
+        return is_binary_content
 
     def _get_content_type(self) -> str:
         return self._get_header("content-type") or ""
