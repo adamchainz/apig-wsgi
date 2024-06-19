@@ -8,14 +8,13 @@ requires = [
 name = "apig-wsgi"
 version = "2.18.0"
 description = "Wrap a WSGI application in an AWS Lambda handler function for running on API Gateway or an ALB."
-readme = { file = "README.rst", content-type = "text/x-rst" }
+readme = "README.rst"
 keywords = [
   "API Gateway",
   "APIG",
   "AWS",
   "Lambda",
 ]
-license = { text = "MIT" }
 authors = [
   { name = "Adam Johnson", email = "me@adamj.eu" },
 ]
