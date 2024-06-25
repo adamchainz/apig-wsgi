@@ -53,7 +53,7 @@ def make_lambda_handler(
         Whether to support returning APIG-compatible binary responses
     non_binary_content_type_prefixes : tuple of str
         Tuple of content type prefixes which should be considered "Non-Binary" when
-        `binray_support` is True. This prevents apig_wsgi from unexpectedly encoding
+        `binary_support` is True. This prevents apig_wsgi from unexpectedly encoding
         non-binary responses as binary.
     """
     if non_binary_content_type_prefixes is None:
