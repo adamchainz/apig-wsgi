@@ -23,6 +23,7 @@ __all__ = ("make_lambda_handler",)
 DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES: tuple[str, ...] = (
     "text/",
     "application/json",
+    "application/problem+json",
     "application/vnd.api+json",
 )
 
