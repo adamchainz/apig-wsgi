@@ -44,7 +44,7 @@ class App:
 
 
 @pytest.fixture()
-def simple_app() -> Generator[App, None, None]:
+def simple_app() -> Generator[App]:
     yield App(
         headers=[("Content-Type", "text/plain")],
         response=b"Hello World\n",
