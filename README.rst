@@ -47,7 +47,7 @@ Use **pip**:
 
     python -m pip install apig-wsgi
 
-Python 3.8 to 3.12 supported.
+Python 3.8 to 3.13 supported.
 
 Usage
 =====
