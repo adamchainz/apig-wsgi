@@ -197,6 +197,27 @@ class TestV1Events:
             "body": "Hello World\n",
         }
 
+    @parametrize_default_text_content_type
+    def test_get_binary_support_default_text_content_types_encoded(
+        self, simple_app: App, text_content_type: str
+    ) -> None:
+        simple_app.handler = make_lambda_handler(simple_app, binary_support=True)
+        simple_app.headers = [
+            ("Content-Type", text_content_type),
+            ("Content-Encoding", "brotli"),
+        ]
+
+        response = simple_app.handler(make_v1_event(), None)
+        assert response == {
+            "statusCode": 200,
+            "multiValueHeaders": {
+                "Content-Type": [text_content_type],
+                "Content-Encoding": ["brotli"],
+            },
+            "isBase64Encoded": True,
+            "body": b64encode(b"Hello World\n").decode("utf-8"),
+        }
+
     @parametrize_custom_text_content_type
     def test_get_binary_support_custom_text_content_types(
         self, simple_app: App, text_content_type: str
@@ -800,6 +821,27 @@ class TestV2Events:
             "headers": {"content-type": text_content_type},
             "isBase64Encoded": False,
             "body": "Hello World\n",
+        }
+
+    @parametrize_default_text_content_type
+    def test_get_binary_support_default_text_content_types_encoded(
+        self, simple_app: App, text_content_type: str
+    ) -> None:
+        simple_app.handler = make_lambda_handler(simple_app, binary_support=True)
+        simple_app.headers = [
+            ("Content-Type", text_content_type),
+            ("Content-Encoding", "brotli"),
+        ]
+
+        response = simple_app.handler(make_v1_event(), None)
+        assert response == {
+            "statusCode": 200,
+            "multiValueHeaders": {
+                "Content-Type": [text_content_type],
+                "Content-Encoding": ["brotli"],
+            },
+            "isBase64Encoded": True,
+            "body": b64encode(b"Hello World\n").decode("utf-8"),
         }
 
     @parametrize_custom_text_content_type

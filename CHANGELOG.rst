@@ -2,6 +2,10 @@
 Changelog
 =========
 
+* Send binary responses if the 'content-encoding' header is set to any value, rather than just 'gzip'.
+
+  Thanks to Zoe Guillen for the report in `PR #496 <https://github.com/adamchainz/apig-wsgi/pull/496>`__.
+
 * Support Python 3.13.
 
 * Drop Python 3.8 support.
