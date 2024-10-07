@@ -6,6 +6,10 @@ Changelog
 
   Thanks to Zoe Guillen for the report in `PR #496 <https://github.com/adamchainz/apig-wsgi/pull/496>`__.
 
+* Treat the content-type header "application/problem+json" as non binary by default.
+
+  Thanks to Ido Savion in `PR #503 <https://github.com/adamchainz/apig-wsgi/pull/503>`__.
+
 * Support Python 3.13.
 
 * Drop Python 3.8 support.

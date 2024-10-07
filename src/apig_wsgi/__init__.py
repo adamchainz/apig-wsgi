@@ -21,7 +21,11 @@ __all__ = ("make_lambda_handler",)
 DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES: tuple[str, ...] = (
     "text/",
     "application/json",
+    # application/problem+json - a draft standard for JSON error responses
+    # https://datatracker.ietf.org/doc/html/draft-ietf-appsawg-http-problem-00#section-3
     "application/problem+json",
+    # application/vnd.api+json - JSON:API specification
+    # https://jsonapi.org/
     "application/vnd.api+json",
 )
 
