@@ -75,13 +75,23 @@ def make_lambda_handler(
             version = event.get("version", "1.0")
 
         if version in ("1.0", "alb"):
-            # Binary support deafults 'off' on version 1
-            event_binary_support = binary_support or False
             environ = get_environ_v1(
                 event,
                 context,
                 encode_query_params=(version == "1.0"),
             )
+            if version == "1.0":
+                # Binary support defaults to 'off' on version 1
+                if binary_support is None:
+                    event_binary_support = False
+                else:
+                    event_binary_support = binary_support
+            else:
+                # Binary support defaults to 'on' on ALBs
+                if binary_support is None:
+                    event_binary_support = True
+                else:
+                    event_binary_support = binary_support
             response: BaseResponse = V1Response(
                 binary_support=event_binary_support,
                 non_binary_content_type_prefixes=non_binary_prefixes_tuple,
