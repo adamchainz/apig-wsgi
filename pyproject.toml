@@ -6,7 +6,7 @@ requires = [
 
 [project]
 name = "apig-wsgi"
-version = "2.18.0"
+version = "2.19.0"
 description = "Wrap a WSGI application in an AWS Lambda handler function for running on API Gateway or an ALB."
 readme = "README.rst"
 keywords = [
