@@ -274,19 +274,17 @@ class BaseResponse:
         if not self.binary_support:
             return False
 
-        content_type = self._get_content_type()
-        if not content_type.startswith(self.non_binary_content_type_prefixes):
+        if self._get_content_encoding() > "":
             return True
 
-        content_encoding = self._get_content_encoding()
-        # Content type is non-binary but the content encoding might be.
-        return "gzip" in content_encoding.lower()
-
-    def _get_content_type(self) -> str:
-        return self._get_header("content-type") or ""
+        content_type = self._get_content_type()
+        return not content_type.startswith(self.non_binary_content_type_prefixes)
 
     def _get_content_encoding(self) -> str:
         return self._get_header("content-encoding") or ""
+
+    def _get_content_type(self) -> str:
+        return self._get_header("content-type") or ""
 
     def _get_header(self, header_name: str) -> str | None:
         header_name = header_name.lower()

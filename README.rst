@@ -89,12 +89,13 @@ responses:
   header as well, which WSGI applications often ignore. You may need to delete
   and recreate your stages for this value to be copied over.
 
-Note that binary responses aren't sent if your response has a 'Content-Type'
-starting 'text/', 'application/json' or 'application/vnd.api+json' - this
-is to support sending larger text responses, since the base64 encoding would
+Note that binary responses aren't sent if your response has no
+'content-encoding' header and a 'content-type' header starting
+'text/', 'application/json' or 'application/vnd.api+json'. This behaviour is to
+support sending larger text responses, since the base64 encoding would
 otherwise inflate the content length. To avoid base64 encoding other content
 types, you can set ``non_binary_content_type_prefixes`` to a list or tuple of
-content type prefixes of your choice (which replaces the default list).
+content type prefixes of your choice, which replaces the default list.
 
 If the event from API Gateway contains the ``requestContext`` key, for example
 on format version 2 or from custom request authorizers, this will be available
