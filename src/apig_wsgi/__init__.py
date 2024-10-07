@@ -5,14 +5,12 @@ import urllib
 from base64 import b64decode
 from base64 import b64encode
 from collections import defaultdict
+from collections.abc import Iterable
+from collections.abc import Sequence
 from io import BytesIO
 from types import TracebackType
 from typing import Any
 from typing import Callable
-from typing import Iterable
-from typing import Sequence
-from typing import Tuple
-from typing import Type
 from typing import Union
 from urllib.parse import urlencode
 
@@ -29,8 +27,8 @@ DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES: tuple[str, ...] = (
 RESERVED_URI_CHARACTERS = r"!#$&'()*+,/:;=?@[]%"
 
 _ExcInfoType = Union[
-    Tuple[Type[BaseException], BaseException, TracebackType],
-    Tuple[None, None, None],
+    tuple[type[BaseException], BaseException, TracebackType],
+    tuple[None, None, None],
     None,
 ]
 
