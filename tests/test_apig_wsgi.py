@@ -257,6 +257,34 @@ class TestV1Events:
             "body": b64encode(b"\x13\x37").decode("utf-8"),
         }
 
+    def test_get_binary_support_alb_default(self, simple_app: App) -> None:
+        simple_app.handler = make_lambda_handler(simple_app)
+        simple_app.headers = [("Content-Type", "application/octet-stream")]
+        simple_app.response = b"\x13\x37"
+
+        response = simple_app.handler(make_alb_event(), None)
+
+        assert response == {
+            "statusCode": 200,
+            "multiValueHeaders": {"Content-Type": ["application/octet-stream"]},
+            "isBase64Encoded": True,
+            "body": b64encode(b"\x13\x37").decode("utf-8"),
+        }
+
+    def test_get_binary_support_alb_enabled(self, simple_app: App) -> None:
+        simple_app.handler = make_lambda_handler(simple_app, binary_support=True)
+        simple_app.headers = [("Content-Type", "application/octet-stream")]
+        simple_app.response = b"\x13\x37"
+
+        response = simple_app.handler(make_alb_event(), None)
+
+        assert response == {
+            "statusCode": 200,
+            "multiValueHeaders": {"Content-Type": ["application/octet-stream"]},
+            "isBase64Encoded": True,
+            "body": b64encode(b"\x13\x37").decode("utf-8"),
+        }
+
     @parametrize_default_text_content_type
     def test_get_binary_support_binary_default_text_with_gzip_content_encoding(
         self, simple_app: App, text_content_type: str

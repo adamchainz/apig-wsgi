@@ -10,6 +10,10 @@ Changelog
 
   Thanks to Zoe Guillen for the report in `PR #496 <https://github.com/adamchainz/apig-wsgi/pull/496>`__.
 
+* Enable binary support by default for ALB events.
+
+  Thanks to Oliver Ford for the report in `Issue #513 <https://github.com/adamchainz/apig-wsgi/issues/513>`__.
+
 * Treat the content-type header "application/problem+json" as non binary by default.
 
   Thanks to Ido Savion in `PR #503 <https://github.com/adamchainz/apig-wsgi/pull/503>`__.
