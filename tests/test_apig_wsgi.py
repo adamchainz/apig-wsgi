@@ -54,7 +54,13 @@ def simple_app() -> Generator[App]:
 
 parametrize_default_text_content_type = pytest.mark.parametrize(
     "text_content_type",
-    ["text/plain", "text/html", "application/json", "application/vnd.api+json"],
+    [
+        "text/plain",
+        "text/html",
+        "application/json",
+        "application/problem+json",
+        "application/vnd.api+json",
+    ],
 )
 
 
