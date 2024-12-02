@@ -63,7 +63,7 @@ Use apig-wsgi in your AWS Lambda Function that you attach to one of:
 Both “format version 1” and “format version 2” are supported
 (`documentation <https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html>`__).
 apig-wsgi will automatically detect the version in use.
-At time of writing, “format version 2” is used for Lambda Function URL’s and API Gateway HTTP API’s.
+At time of writing, “format version 2” is used for Lambda Function URLs and API Gateway HTTP APIs.
 
 ``make_lambda_handler(app, binary_support=None, non_binary_content_type_prefixes=None)``
 ----------------------------------------------------------------------------------------
@@ -78,10 +78,10 @@ and ``False`` for format version 1. Depending on how you're deploying your
 lambda function, you may need extra configuration before you can enable binary
 responses:
 
-* ALB’s support binary responses by default.
-* API Gateway HTTP API’s support binary responses by default (and default to
+* ALBs support binary responses by default.
+* API Gateway HTTP APIs support binary responses by default (and default to
   event format version 2).
-* API Gateway REST API’s (the “old” style) require you to add ``'*/*'`` in the
+* API Gateway REST APIs (the “old” style) require you to add ``'*/*'`` in the
   “binary media types” configuration. You will need to configure this through
   API Gateway directly, CloudFormation, SAM, or whatever tool your project is
   using. Whilst this supports a list of binary media types, using ``'*/*'`` is
@@ -111,7 +111,7 @@ it's available in the WSGI environ at the key ``apig_wsgi.context``.
 If you’re using “format version 1”, multiple values for request and response
 headers and query parameters are supported. They are enabled automatically on
 API Gateway but need `explict activation on
-ALB’s <https://docs.aws.amazon.com/elasticloadbalancing/latest/application/lambda-functions.html#multi-value-headers>`__.
+ALBs <https://docs.aws.amazon.com/elasticloadbalancing/latest/application/lambda-functions.html#multi-value-headers>`__.
 If you need to determine from within your application if multiple header values
 are enabled, you can can check the ``apgi_wsgi.multi_value_headers`` key in the
 WSGI environ, which is ``True`` if they are enabled and ``False`` otherwise.
