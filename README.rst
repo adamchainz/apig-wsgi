@@ -60,61 +60,41 @@ Use apig-wsgi in your AWS Lambda Function that you attach to one of:
 * An `ALB <https://docs.aws.amazon.com/lambda/latest/dg/services-alb.html>`__
 
 
-Both “format version 1” and “format version 2” are supported
-(`documentation <https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html>`__).
+Both “format version 1” and “format version 2” are supported (`documentation <https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-integrations-lambda.html>`__).
 apig-wsgi will automatically detect the version in use.
 At time of writing, “format version 2” is used for Lambda Function URLs and API Gateway HTTP APIs.
 
 ``make_lambda_handler(app, binary_support=None, non_binary_content_type_prefixes=None)``
 ----------------------------------------------------------------------------------------
 
-``app`` should be a WSGI app, for example from Django's ``wsgi.py`` or Flask's
-``Flask()`` object.
+``app`` should be a WSGI app, for example from Django's ``wsgi.py`` or Flask's ``Flask()`` object.
 
-``binary_support`` configures whether responses containing binary are
-supported. The default, ``None``, means to automatically detect this from the
-format version of the event - on it defaults to ``True`` for format version 2,
-and ``False`` for format version 1. Depending on how you're deploying your
-lambda function, you may need extra configuration before you can enable binary
-responses:
+``binary_support`` configures whether responses containing binary are supported.
+The default, ``None``, means to automatically detect this from the format version of the event - on it defaults to ``True`` for format version 2, and ``False`` for format version 1.
+Depending on how you're deploying your lambda function, you may need extra configuration before you can enable binary responses:
 
 * ALBs support binary responses by default.
-* API Gateway HTTP APIs support binary responses by default (and default to
-  event format version 2).
-* API Gateway REST APIs (the “old” style) require you to add ``'*/*'`` in the
-  “binary media types” configuration. You will need to configure this through
-  API Gateway directly, CloudFormation, SAM, or whatever tool your project is
-  using. Whilst this supports a list of binary media types, using ``'*/*'`` is
-  the best way to configure it, since it is used to match the request 'Accept'
-  header as well, which WSGI applications often ignore. You may need to delete
-  and recreate your stages for this value to be copied over.
 
-Note that binary responses aren't sent if your response has no
-'content-encoding' header and a 'content-type' header starting
-'text/', 'application/json' or 'application/vnd.api+json'. This behaviour is to
-support sending larger text responses, since the base64 encoding would
-otherwise inflate the content length. To avoid base64 encoding other content
-types, you can set ``non_binary_content_type_prefixes`` to a list or tuple of
-content type prefixes of your choice, which replaces the default list.
+* API Gateway HTTP APIs support binary responses by default (and default to event format version 2).
 
-If the event from API Gateway contains the ``requestContext`` key, for example
-on format version 2 or from custom request authorizers, this will be available
-in the WSGI environ at the key ``apig_wsgi.request_context``.
+* API Gateway REST APIs (the “old” style) require you to add ``'*/*'`` in the “binary media types” configuration.
+  You will need to configure this through API Gateway directly, CloudFormation, SAM, or whatever tool your project is using.
+  While this supports a list of binary media types, using ``'*/*'`` is the best way to configure it, since it is used to match the request 'Accept' header as well, which WSGI applications often ignore.
+  You may need to delete and recreate your stages for this value to be copied over.
 
-If you want to inspect the full event from API Gateway, it's available in the
-WSGI environ at the key ``apig_wsgi.full_event``.
+Note that binary responses aren't sent if your response has no 'content-encoding' header and a 'content-type' header starting 'text/', 'application/json', or 'application/vnd.api+json'.
+This behaviour is to support sending larger text responses, since the base64 encoding would otherwise inflate the content length.
+To avoid base64 encoding other content types, set ``non_binary_content_type_prefixes`` to a list or tuple of content type prefixes of your choice, which replaces the default list.
 
-If you need the
-`Lambda Context object <https://docs.aws.amazon.com/lambda/latest/dg/python-context.html>`__,
-it's available in the WSGI environ at the key ``apig_wsgi.context``.
+If the event from API Gateway contains the ``requestContext`` key, for example on format version 2 or from custom request authorizers, this will be available in the WSGI environ at the key ``apig_wsgi.request_context``.
 
-If you’re using “format version 1”, multiple values for request and response
-headers and query parameters are supported. They are enabled automatically on
-API Gateway but need `explict activation on
-ALBs <https://docs.aws.amazon.com/elasticloadbalancing/latest/application/lambda-functions.html#multi-value-headers>`__.
-If you need to determine from within your application if multiple header values
-are enabled, you can can check the ``apgi_wsgi.multi_value_headers`` key in the
-WSGI environ, which is ``True`` if they are enabled and ``False`` otherwise.
+If you want to inspect the full event from API Gateway, it's available in the WSGI environ at the key ``apig_wsgi.full_event``.
+
+If you need the `Lambda Context object <https://docs.aws.amazon.com/lambda/latest/dg/python-context.html>`__, it's available in the WSGI environ at the key ``apig_wsgi.context``.
+
+If you’re using “format version 1”, multiple values for request and response headers and query parameters are supported.
+They are enabled automatically on API Gateway but need `explict activation on ALBs <https://docs.aws.amazon.com/elasticloadbalancing/latest/application/lambda-functions.html#multi-value-headers>`__.
+If you need to determine from within your application if multiple header values are enabled, you can can check the ``apgi_wsgi.multi_value_headers`` key in the WSGI environ, which is ``True`` if they are enabled and ``False`` otherwise.
 
 Example
 =======
