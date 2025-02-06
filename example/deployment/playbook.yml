@@ -67,11 +67,11 @@
   # 2. Create base resources
 
   - name: create or update base stack
-    # https://docs.ansible.com/ansible/latest/modules/cloudformation_module.html
+    # https://docs.ansible.com/ansible/latest/collections/amazon/aws/cloudformation_module.html
     cloudformation:
       region: '{{ aws_region }}'
       stack_name: 'apig-wsgi-testapp-base'
-      template: files/cloudformation_base.yml
+      template_body: "{{ lookup('file', 'files/cloudformation_base.yml') }}"
     register: base_stack_result
 
   # 3. Upload Lambda package into S3 bucket
@@ -92,7 +92,7 @@
     cloudformation:
       region: '{{ aws_region }}'
       stack_name: 'apig-wsgi-testapp-site'
-      template: files/cloudformation_site.yml
+      template_body: "{{ lookup('file', 'files/cloudformation_site.yml') }}"
       template_parameters:
         PackageS3Bucket: '{{ base_stack_result.stack_outputs.PackageS3Bucket }}'
         PackageS3Key: '{{ zip_name }}'
