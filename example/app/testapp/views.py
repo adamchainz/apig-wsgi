@@ -74,6 +74,10 @@ def index(request: WSGIRequest) -> HttpResponse:
 
 def favicon(request: WSGIRequest) -> HttpResponse:
     return HttpResponse(
-        (MODULE_DIR / "favicon.ico").read_bytes(),
-        content_type="image/x-icon",
+        (
+            '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">'
+            + '<text y=".9em" font-size="90">😄</text>'
+            + "</svg>"
+        ),
+        content_type="image/svg+xml",
     )
