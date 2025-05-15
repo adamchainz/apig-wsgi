@@ -93,7 +93,7 @@ If you want to inspect the full event from API Gateway, it's available in the WS
 If you need the `Lambda Context object <https://docs.aws.amazon.com/lambda/latest/dg/python-context.html>`__, it's available in the WSGI environ at the key ``apig_wsgi.context``.
 
 If you’re using “format version 1”, multiple values for request and response headers and query parameters are supported.
-They are enabled automatically on API Gateway but need `explict activation on ALBs <https://docs.aws.amazon.com/elasticloadbalancing/latest/application/lambda-functions.html#multi-value-headers>`__.
+They are enabled automatically on API Gateway but need `explicit activation on ALBs <https://docs.aws.amazon.com/elasticloadbalancing/latest/application/lambda-functions.html#multi-value-headers>`__.
 If you need to determine from within your application if multiple header values are enabled, you can can check the ``apgi_wsgi.multi_value_headers`` key in the WSGI environ, which is ``True`` if they are enabled and ``False`` otherwise.
 
 Example
