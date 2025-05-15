@@ -11,8 +11,8 @@ The Application
 
 The application in ``app/`` is a simple database-less Django application with debugging pages.
 
-(Optional) Runnning the Application Locally
--------------------------------------------
+(Optional) Running the Application Locally
+------------------------------------------
 
 We use vanilla venv, pip, and Django to run:
 
