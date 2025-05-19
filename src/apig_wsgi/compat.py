@@ -10,10 +10,7 @@ else:
     # Partial backport of wsgiref.types
     from collections.abc import Iterable
     from types import TracebackType
-    from typing import Any
-    from typing import Callable
-    from typing import Protocol
-    from typing import Union
+    from typing import Any, Callable, Protocol, Union
 
     _ExcInfo = tuple[type[BaseException], BaseException, TracebackType]
     _OptExcInfo = Union[_ExcInfo, tuple[None, None, None]]

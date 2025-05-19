@@ -2,16 +2,12 @@ from __future__ import annotations
 
 import sys
 import urllib
-from base64 import b64decode
-from base64 import b64encode
+from base64 import b64decode, b64encode
 from collections import defaultdict
-from collections.abc import Iterable
-from collections.abc import Sequence
+from collections.abc import Iterable, Sequence
 from io import BytesIO
 from types import TracebackType
-from typing import Any
-from typing import Callable
-from typing import Union
+from typing import Any, Callable, Union
 from urllib.parse import urlencode
 
 from apig_wsgi.compat import WSGIApplication
