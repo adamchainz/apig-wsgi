@@ -1,14 +1,13 @@
 from __future__ import annotations
 
 import sys
-import urllib
 from base64 import b64decode, b64encode
 from collections import defaultdict
 from collections.abc import Iterable, Sequence
 from io import BytesIO
 from types import TracebackType
 from typing import Any, Callable, Union
-from urllib.parse import urlencode
+from urllib.parse import unquote, urlencode
 
 from apig_wsgi.compat import WSGIApplication
 
@@ -115,7 +114,7 @@ def get_environ_v1(
     environ: dict[str, Any] = {
         "CONTENT_LENGTH": str(len(body)),
         "HTTP": "on",
-        "PATH_INFO": urllib.parse.unquote(event["path"], encoding="iso-8859-1"),
+        "PATH_INFO": unquote(event["path"], encoding="iso-8859-1"),
         "REMOTE_ADDR": "127.0.0.1",
         "REQUEST_METHOD": event["httpMethod"],
         "SCRIPT_NAME": "",
@@ -194,7 +193,7 @@ def get_environ_v2(event: dict[str, Any], context: Any) -> dict[str, Any]:
         "CONTENT_LENGTH": str(len(body)),
         "HTTP": "on",
         "HTTP_COOKIE": ";".join(event.get("cookies", ())),
-        "PATH_INFO": urllib.parse.unquote(event["rawPath"], encoding="iso-8859-1"),
+        "PATH_INFO": unquote(event["rawPath"], encoding="iso-8859-1"),
         "QUERY_STRING": event["rawQueryString"],
         "REMOTE_ADDR": http["sourceIp"],
         "REQUEST_METHOD": http["method"],
