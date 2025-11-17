@@ -8,12 +8,12 @@ if sys.version_info >= (3, 11):
     from wsgiref.types import WSGIApplication
 else:
     # Partial backport of wsgiref.types
-    from collections.abc import Iterable
+    from collections.abc import Callable, Iterable
     from types import TracebackType
-    from typing import Any, Callable, Protocol, Union
+    from typing import Any, Protocol
 
     _ExcInfo = tuple[type[BaseException], BaseException, TracebackType]
-    _OptExcInfo = Union[_ExcInfo, tuple[None, None, None]]
+    _OptExcInfo = _ExcInfo | tuple[None, None, None]
 
     class StartResponse(Protocol):
         """start_response() callable as defined in PEP 3333"""
