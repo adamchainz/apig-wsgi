@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import sys
 from base64 import b64encode
-from collections.abc import Generator, Iterable
+from collections.abc import Callable, Generator, Iterable
 from io import BytesIO
-from typing import Any, Callable
+from typing import Any
 
 import pytest
 

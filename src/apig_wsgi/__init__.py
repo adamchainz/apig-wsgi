@@ -3,10 +3,10 @@ from __future__ import annotations
 import sys
 from base64 import b64decode, b64encode
 from collections import defaultdict
-from collections.abc import Iterable, Sequence
+from collections.abc import Callable, Iterable, Sequence
 from io import BytesIO
 from types import TracebackType
-from typing import Any, Callable, Union
+from typing import Any
 from urllib.parse import unquote, urlencode
 
 from apig_wsgi.compat import WSGIApplication
@@ -26,11 +26,11 @@ DEFAULT_NON_BINARY_CONTENT_TYPE_PREFIXES: tuple[str, ...] = (
 
 RESERVED_URI_CHARACTERS = r"!#$&'()*+,/:;=?@[]%"
 
-_ExcInfoType = Union[
-    tuple[type[BaseException], BaseException, TracebackType],
-    tuple[None, None, None],
-    None,
-]
+_ExcInfoType = (
+    tuple[type[BaseException], BaseException, TracebackType]
+    | tuple[None, None, None]
+    | None
+)
 
 
 def make_lambda_handler(
