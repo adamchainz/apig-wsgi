@@ -4,7 +4,7 @@ Example Application
 Requirements
 ------------
 
-Python 3.13.
+Python 3.14.
 
 The Application
 ---------------
@@ -14,15 +14,14 @@ The application in ``app/`` is a simple database-less Django application with de
 (Optional) Running the Application Locally
 ------------------------------------------
 
-We use vanilla venv, pip, and Django to run:
+We use uv to run:
 
 .. code-block:: sh
 
    cd app
-   python -m venv .venv
+   uv venv
+   uv pip install -r requirements.txt -e ../..
    source .venv/bin/activate
-   python -m pip install -r requirements.txt
-   python -m pip install -e ../..
    python manage.py runserver
 
 Open it at http://127.0.0.1:8000/
@@ -40,9 +39,9 @@ After you’ve done that, create a deployment venv, install Ansible and other re
 .. code-block:: sh
 
    cd deployment
-   python -m venv .venv
+   uv venv --seed
    source .venv/bin/activate
-   python -m pip install -r requirements.txt
+   uv pip install -r requirements.txt
    ansible-playbook playbook.yml
 
 Ansible will build the application and deploy it to the ``eu-central-1`` region (this can be changed in the plyabook).
