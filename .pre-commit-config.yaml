@@ -51,5 +51,5 @@ repos:
   hooks:
   - id: mypy
     additional_dependencies:
-    - django-stubs==5.1.2
+    - django-stubs==6.1.0
     - pytest==7.1.2
