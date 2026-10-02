@@ -3,11 +3,11 @@ from __future__ import annotations
 import json
 import os
 from typing import Any, cast
+from wsgiref.types import WSGIApplication
 
 from django.core.wsgi import get_wsgi_application
 
 from apig_wsgi import make_lambda_handler
-from apig_wsgi.compat import WSGIApplication
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "testapp.settings")
 
