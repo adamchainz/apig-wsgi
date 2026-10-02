@@ -8,8 +8,7 @@ from io import BytesIO
 from types import TracebackType
 from typing import Any
 from urllib.parse import unquote, urlencode
-
-from apig_wsgi.compat import WSGIApplication
+from wsgiref.types import WSGIApplication
 
 __all__ = ("make_lambda_handler",)
 
